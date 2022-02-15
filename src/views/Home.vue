@@ -1,17 +1,18 @@
 <template>
-  <div>
-    <HelloWorld />
-  </div>
+  <v-container
+    ><ul>
+      <li>
+        Arknights Game Data by:<a
+          href="https://github.com/Kengxxiao/ArknightsGameData"
+          >Kengxxiao/ArknightsGameData</a
+        >
+      </li>
+    </ul></v-container
+  >
 </template>
 
 <script>
-import HelloWorld from "../components/HelloWorld.vue";
-
 export default {
   name: "Home",
-
-  components: {
-    HelloWorld,
-  },
 };
 </script>

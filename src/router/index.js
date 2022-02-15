@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Home from "../views/Home.vue";
-
+const StoryReader = () => import("../views/StoryReader/StoryReader.vue");
 const routes = [
   {
     path: "/",
@@ -8,13 +8,24 @@ const routes = [
     component: Home,
   },
   {
-    path: "/about",
-    name: "About",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/About.vue"),
+    path: "/story-reader",
+    name: "Story Reader",
+    component: StoryReader,
+    children: [
+      {
+        path: "",
+        component: () => import("../views/StoryReader/StoryReaderHome.vue"),
+      },
+      {
+        path: "story",
+        component: () => import("../views/StoryReader/StoryReaderMain.vue"),
+        props: (route) => ({
+          storyId: route.query.id,
+          storyIndex: route.query.index,
+          server: route.query.server,
+        }),
+      },
+    ],
   },
 ];
 
