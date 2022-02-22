@@ -1,13 +1,18 @@
 <template>
-  <div class="d-flex flex-column pa-3">
-    <v-btn
+  <v-row dense>
+    <v-col
+      cols="12"
       v-for="(option, index) in line.params.options"
       :key="index"
-      :variant="getVariant(option.value)"
-      @click="selectDecision(option.value)"
-      >{{ option.text }}</v-btn
     >
-  </div>
+      <v-btn
+        class="float-right text-right"
+        :variant="getVariant(option.value)"
+        @click="selectDecision(option.value)"
+        >{{ option.text }}</v-btn
+      >
+    </v-col>
+  </v-row>
 </template>
 
 <script>
@@ -16,7 +21,7 @@ export default {
   emits: ["selectDecision"],
   methods: {
     getVariant(value) {
-      let variant = "text";
+      let variant = "contained";
       let id =
         this.decision[this.line.params.id] || this.line.params.options[0].value;
       if (id === value) {

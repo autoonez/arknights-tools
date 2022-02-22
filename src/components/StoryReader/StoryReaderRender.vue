@@ -141,6 +141,20 @@ export default {
             };
             break;
           }
+          case "IMAGE": {
+            if (lastLine) {
+              renderBlock.push(lastLine);
+            }
+            lastLine = line;
+            break;
+          }
+          case "BACKGROUND": {
+            if (lastLine) {
+              renderBlock.push(lastLine);
+            }
+            lastLine = line;
+            break;
+          }
           default: {
             break;
           }

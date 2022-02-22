@@ -1,15 +1,17 @@
 <template>
-  <div>
-    <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
-    <!-- <StoryReaderBreadcrumb :storyTypeList="storyTypeList" /> -->
-    <v-container v-if="!loading">
-      <router-view :storyTable="storyTable" />
-    </v-container>
-  </div>
+  <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
+  <template v-if="!loading">
+    <StorySelector :storyTable="storyTable" @selectFile="selectFile" />
+    <StoryReaderMain :storyFile="storyFile" />
+  </template>
 </template>
 
 <script>
+import { assetUrl } from "../../constants/url";
+import StorySelector from "../../components/StorySelector/StorySelector.vue";
+import StoryReaderMain from "./StoryReaderMain.vue";
 export default {
+  props: ["storyType", "storyId", "storyIndex", "server"],
   created() {
     this.getStoryTable();
   },
@@ -17,34 +19,29 @@ export default {
     return {
       loading: false,
       storyTable: {},
-      serverList: [
-        { id: "zh_CN", name: "China" },
-        { id: "en_US", name: "Global" },
-        { id: "ja_JP", name: "Japan" },
-        { id: "ko_KR", name: "Korea" },
-        { id: "zh_TW", name: "Taiwan" },
-      ],
-      storyTypeList: [
-        { id: "MAIN_STORY", name: "MAIN STORY" },
-        { id: "ACTIVITY_STORY", name: "Activity Story" },
-        { id: "MINI_STORY", name: "Mini Activity Story" },
-        { id: "CHARACTER_STORY", name: "CHARACTER STORY" },
-      ],
-      storySelector: {
-        storyType: "",
+      storyFile: {
+        file: "",
+        server: "",
       },
     };
   },
   methods: {
     getStoryTable() {
       this.loading = true;
-      fetch("/arknights-assets/table/story_review_table.json")
+      fetch(`${assetUrl}/table/story_review_table.json`)
         .then((response) => response.json())
         .then((data) => {
           this.storyTable = data;
           this.loading = false;
         });
     },
+    selectFile({ file, server }) {
+      this.storyFile = {
+        file,
+        server,
+      };
+    },
   },
+  components: { StorySelector, StoryReaderMain },
 };
 </script>

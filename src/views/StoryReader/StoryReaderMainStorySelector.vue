@@ -1,1 +1,0 @@
-<template>Main Story</template>

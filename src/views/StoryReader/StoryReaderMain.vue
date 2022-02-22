@@ -1,7 +1,4 @@
 <template>
-  <v-banner>
-    <v-banner-text>{{ storyName }}</v-banner-text>
-  </v-banner>
   <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
   <StoryReaderRender v-if="!loading" :storyData="storyData" />
 </template>
@@ -9,22 +6,23 @@
 <script>
 import { storyTextToObject } from "../../helpers/storyHelper";
 import StoryReaderRender from "../../components/StoryReader/StoryReaderRender.vue";
+import { assetUrl } from "../../constants/url";
 
 export default {
-  props: ["storyId", "storyIndex", "server", "storyTable"],
+  props: ["storyFile"],
   data() {
     return {
       loading: true,
-      storyInfo: {},
       storyData: {
         lines: [],
         tagCount: {},
       },
+      storyInfo: undefined,
     };
   },
   created() {
     this.$watch(
-      () => [this.storyId, this.storyIndex, this.server],
+      () => [this.storyFile],
       () => {
         this.getStoryInfo();
       },
@@ -33,51 +31,18 @@ export default {
   },
   methods: {
     getStoryInfo() {
-      let storySet = this.storyTable.find((story) => story.id === this.storyId);
-      if (!storySet) this.$router.push("/story-reader");
-      if (storySet) {
-        if (!Object.keys(storySet.name).includes(this.server)) {
-          this.$router.push({
-            path: "/story-reader",
-            query: {
-              storyId: this.storyId,
-            },
-          });
-        }
-        let storyInfo = storySet.story.find(
-          (story) => story.sort === parseInt(this.storyIndex)
+      if (this.storyFile.file) {
+        this.loading = true;
+        fetch(
+          `${assetUrl}/story/${this.storyFile.server}/${this.storyFile.file}.txt`
+        ).then((response) =>
+          response.text().then((text) => {
+            let storyData = storyTextToObject(text);
+            this.storyData = storyData;
+            this.loading = false;
+          })
         );
-        if (!storyInfo)
-          this.$router.push({
-            path: "/story-reader",
-            query: {
-              storyId: this.storyId,
-              server: this.server,
-            },
-          });
-        this.storyInfo = storyInfo;
       }
-    },
-  },
-  computed: {
-    storyName() {
-      return `${this.storyInfo.code ? `${this.storyInfo.code}: ` : ``}${
-        this.storyInfo.name[this.server]
-      }`;
-    },
-  },
-  watch: {
-    storyInfo() {
-      this.loading = true;
-      fetch(
-        `/arknights-assets/story/${this.server}/${this.storyInfo.file}.txt`
-      ).then((response) =>
-        response.text().then((text) => {
-          let storyData = storyTextToObject(text);
-          this.storyData = storyData;
-          this.loading = false;
-        })
-      );
     },
   },
   components: { StoryReaderRender },

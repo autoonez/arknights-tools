@@ -10,12 +10,17 @@
     v-else-if="line.tag === 'DECISION'"
     @selectDecision="selectDecision"
   />
+  <TagImage
+    :line="line"
+    v-else-if="['IMAGE', 'BACKGROUND'].includes(line.tag)"
+  />
 </template>
 
 <script>
 import TagDescription from "./TagDescription.vue";
 import TagCharacterSpeech from "./TagCharacterSpeech.vue";
 import TagDecision from "./TagDecision.vue";
+import TagImage from "./TagImage.vue";
 export default {
   props: ["line", "decision"],
   emits: ["selectDecision"],
@@ -24,6 +29,6 @@ export default {
       this.$emit("selectDecision", value);
     },
   },
-  components: { TagDescription, TagCharacterSpeech, TagDecision },
+  components: { TagDescription, TagCharacterSpeech, TagDecision, TagImage },
 };
 </script>

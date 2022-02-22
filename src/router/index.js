@@ -11,21 +11,12 @@ const routes = [
     path: "/story-reader",
     name: "Story Reader",
     component: StoryReader,
-    children: [
-      {
-        path: "",
-        component: () => import("../views/StoryReader/StoryReaderHome.vue"),
-      },
-      {
-        path: "story",
-        component: () => import("../views/StoryReader/StoryReaderMain.vue"),
-        props: (route) => ({
-          storyId: route.query.id,
-          storyIndex: route.query.index,
-          server: route.query.server,
-        }),
-      },
-    ],
+    props: (route) => ({
+      storyType: route.query.storyType,
+      storyId: route.query.storyId,
+      storyIndex: route.query.storyIndex,
+      server: route.query.server,
+    }),
   },
 ];
 

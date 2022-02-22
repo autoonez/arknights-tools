@@ -2,8 +2,8 @@
   <v-container
     ><ul>
       <li>
-        Arknights Game Data by:<a
-          href="https://github.com/Kengxxiao/ArknightsGameData"
+        Arknights Game Data:
+        <a href="https://github.com/Kengxxiao/ArknightsGameData"
           >Kengxxiao/ArknightsGameData</a
         >
       </li>
