@@ -1,6 +1,6 @@
 <template>
   <v-card class="my-3">
-    <v-card-text>
+    <v-card-text style="font-size: 1rem; line-height: 1.5rem">
       <p v-for="(text, index) in line.params.text" :key="index">
         {{ text }}
       </p></v-card-text

@@ -1,75 +1,118 @@
 <template>
   <v-dialog
     v-model="dialog"
-    fullscreen
     :scrim="false"
     transition="dialog-bottom-transition"
+    fullscreen
+    scrollable
+    class="dialog"
   >
     <template v-slot:activator="{ props }">
-      <v-card v-bind="props">
+      <v-app-bar density="compact" v-bind="props">
         <StorySelectorBreadcrumb
           :items="getBreadcrumbItems()"
           :server="server"
           :type="'preview'"
         />
-      </v-card>
+      </v-app-bar>
     </template>
     <v-card>
-      <v-layout>
-        <v-app-bar density="compact">
-          <v-btn icon dark @click="dialog = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-          <StorySelectorBreadcrumb
-            :items="getBreadcrumbItems()"
-            :server="server"
-            @SELECT_HOME="selectHome"
-            @SELECT_TYPE="selectType"
-          />
-          <v-spacer></v-spacer>
-          <v-icon>mdi-earth</v-icon>
-          <select v-model="server">
-            <option
-              v-for="(server, index) in serverList"
-              :key="index"
-              :value="server.id"
-            >
-              {{ server.name }}
-            </option>
-          </select>
-          <v-btn :disabled="!ready" text @click="select()">Select</v-btn>
-        </v-app-bar>
-        <v-main>
-          <StorySelectorType
-            v-if="stageComponent === 'TYPE'"
-            @SELECT_TYPE="selectType"
-          />
-          <StorySelectorMain
-            v-if="stageComponent === 'MAIN'"
-            :storyByChapter="getMainStoryByChapter()"
-            :server="server"
-            @SELECT_STORY_ID="selectStoryId"
-          />
-          <StorySelectorActivity
-            v-if="stageComponent === 'ACTIVITY'"
-            :storyList="getActivityStoryList()"
-            :server="server"
-            @SELECT_STORY_ID="selectStoryId"
-          />
-          <StorySelectorCharacter
-            v-if="stageComponent === 'CHARACTER'"
-            :storyList="getCharacterStoryList()"
-            :server="server"
-            @SELECT_STORY_ID="selectStoryId"
-          />
-          <StorySelectorIndex
-            v-if="stageComponent === 'INDEX'"
-            :storyList="getStoryList()"
-            :server="server"
-            @SELECT_STORY_INDEX="selectStoryIndex"
-          />
-        </v-main>
-      </v-layout>
+      <v-toolbar density="compact" class="d-none d-sm-flex">
+        <v-btn icon dark @click="dialog = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+        <StorySelectorBreadcrumb
+          :items="getBreadcrumbItems()"
+          :server="server"
+          :stage="stage"
+          @SELECT_HOME="selectHome"
+          @SELECT_TYPE="selectType"
+        />
+        <v-spacer></v-spacer>
+        <v-icon>mdi-earth</v-icon>
+        <select v-model="server">
+          <option
+            v-for="(server, index) in serverList"
+            :key="index"
+            :value="server.id"
+          >
+            {{ server.name }}
+          </option>
+        </select>
+        <v-btn :disabled="!ready" variant="outlined" text @click="select()"
+          >Select</v-btn
+        >
+      </v-toolbar>
+      <v-toolbar density="compact" class="d-flex d-sm-none">
+        <v-btn icon dark @click="dialog = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+        <StorySelectorBreadcrumb
+          :items="getBreadcrumbItems()"
+          :server="server"
+          :stage="stage"
+          @SELECT_HOME="selectHome"
+          @SELECT_TYPE="selectType"
+        />
+      </v-toolbar>
+      <v-toolbar density="compact" class="d-flex d-sm-none">
+        <v-icon>mdi-earth</v-icon>
+        <select v-model="server">
+          <option
+            v-for="(server, index) in serverList"
+            :key="index"
+            :value="server.id"
+          >
+            {{ server.name }}
+          </option>
+        </select>
+      </v-toolbar>
+      <v-container class="dialog-container overflow-auto my-3">
+        <StorySelectorType
+          v-if="stageComponent === 'TYPE'"
+          @SELECT_TYPE="selectType"
+        />
+        <StorySelectorMain
+          v-if="stageComponent === 'MAIN'"
+          :storyByChapter="getMainStoryByChapter()"
+          :server="server"
+          @SELECT_STORY_ID="selectStoryId"
+        />
+        <StorySelectorActivity
+          v-if="stageComponent === 'ACTIVITY'"
+          :storyList="getActivityStoryList()"
+          :server="server"
+          @SELECT_STORY_ID="selectStoryId"
+        />
+        <StorySelectorCharacter
+          v-if="stageComponent === 'CHARACTER'"
+          :storyList="getCharacterStoryList()"
+          :server="server"
+          @SELECT_STORY_ID="selectStoryId"
+        />
+        <StorySelectorIndex
+          v-if="stageComponent === 'INDEX'"
+          :storyList="getStoryList()"
+          :server="server"
+          @SELECT_STORY_INDEX="selectStoryIndex"
+        />
+      </v-container>
+      <v-footer
+        bottom
+        fixed
+        border
+        height="48px"
+        class="footer d-flex d-sm-none"
+        width="100%"
+      >
+        <v-btn variant="text" @click="goBack()">
+          <v-icon>mdi-chevron-left</v-icon></v-btn
+        >
+        <v-spacer></v-spacer>
+        <v-btn :disabled="!ready" variant="outlined" text @click="select()"
+          >Select</v-btn
+        >
+      </v-footer>
     </v-card>
   </v-dialog>
 </template>
@@ -275,6 +318,14 @@ export default {
         },
       });
     },
+    goBack() {
+      this.ready = false;
+      if (this.stage === "SELECT_STORY_INDEX") {
+        this.stage = "SELECT_STORY_ID";
+      } else {
+        this.stage = "SELECT_TYPE";
+      }
+    },
   },
   components: {
     StorySelectorType,
@@ -291,6 +342,14 @@ export default {
 .dialog-bottom-transition-leave-active {
   transition: transform 0.2s ease-in-out;
 }
+.dialog-container {
+  max-height: calc(100vh - 168px);
+}
+@media (min-width: 600px) {
+  .dialog-container {
+    max-height: calc(100vh - 72px);
+  }
+}
 select {
   padding: 8px 16px;
   color: white;
@@ -299,5 +358,12 @@ select {
 select option {
   background: #1e1e1e;
   padding: 8px 16px;
+}
+.footer {
+  box-shadow: 0px -2px 4px -1px rgb(0 0 0 / 20%),
+    0px 4px 5px 0px rgb(0 0 0 / 14%), 0px 1px 10px 0px rgb(0 0 0 / 12%) !important;
+}
+.dialog {
+  z-index: 2400 !important;
 }
 </style>

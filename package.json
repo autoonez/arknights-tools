@@ -1,6 +1,6 @@
 {
   "name": "arknights-tools",
-  "version": "0.5",
+  "version": "0.5.1",
   "private": true,
   "scripts": {
     "serve": "vite preview",
@@ -14,7 +14,7 @@
     "roboto-fontface": "*",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
-    "vuetify": "npm:@vuetify/nightly@next",
+    "vuetify": "^3.0.0-alpha.13",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {

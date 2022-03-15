@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app class="app">
     <v-app-bar density="compact">
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-app-bar-title>Arknights Tools</v-app-bar-title>
@@ -24,3 +24,9 @@ export default {
   }),
 };
 </script>
+
+<style>
+.app {
+  min-height: 100vh;
+}
+</style>
