@@ -14,7 +14,7 @@ export default {
   props: ["classId"],
   computed: {
     imgSrc() {
-      return `${assetUrl}/images/class/icon_profession_${this.classId}_large.png`;
+      return `${assetUrl}/images/class/icon_profession_${this.classId.toLowerCase()}_large.png`;
     },
   },
 };
