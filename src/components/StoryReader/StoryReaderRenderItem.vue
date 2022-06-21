@@ -1,5 +1,6 @@
 <template>
   <TagDescription :line="line" v-if="line.tag === 'DESCRIPTION'" />
+  <TagSubtitle :line="line" v-else-if="line.tag === 'SUBTITLE'" />
   <TagCharacterSpeech
     :line="line"
     v-else-if="line.tag === 'CHARACTER_SPEECH'"
@@ -21,6 +22,7 @@ import TagDescription from "./TagDescription.vue";
 import TagCharacterSpeech from "./TagCharacterSpeech.vue";
 import TagDecision from "./TagDecision.vue";
 import TagImage from "./TagImage.vue";
+import TagSubtitle from "./TagSubtitle.vue";
 export default {
   props: ["line", "decision"],
   emits: ["selectDecision"],
@@ -29,6 +31,12 @@ export default {
       this.$emit("selectDecision", value);
     },
   },
-  components: { TagDescription, TagCharacterSpeech, TagDecision, TagImage },
+  components: {
+    TagDescription,
+    TagCharacterSpeech,
+    TagDecision,
+    TagImage,
+    TagSubtitle,
+  },
 };
 </script>

@@ -1,7 +1,13 @@
 <template>
   <v-row class="my-3">
     <v-col cols="12" sm="2" class="pb-0 pb-sm-3"
-      ><p class="font-weight-bold text-grey">{{ line.params.name }}</p>
+      ><p
+        class="font-weight-bold text-grey"
+        :class="[{ hasImage: line.params.image }]"
+        @click="$emit('selectCharImage', line.params.image)"
+      >
+        {{ line.params.name }}
+      </p>
     </v-col>
     <v-col cols="12" sm="8" class="pt-0 pt-sm-3"
       ><p
@@ -20,5 +26,13 @@
 <script>
 export default {
   props: ["line"],
+  emits: ["selectCharImage"],
 };
 </script>
+
+<style>
+.hasImage {
+  cursor: pointer;
+  text-decoration: underline;
+}
+</style>

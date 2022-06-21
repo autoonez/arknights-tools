@@ -8,6 +8,7 @@
       <v-list>
         <v-list-item to="/">Home</v-list-item>
         <v-list-item to="/story-reader/">Story Reader</v-list-item>
+        <v-list-item to="/material-planner/">Material Planner</v-list-item>
       </v-list>
     </v-navigation-drawer>
     <v-main>
@@ -25,7 +26,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .app {
   min-height: 100vh;
 }

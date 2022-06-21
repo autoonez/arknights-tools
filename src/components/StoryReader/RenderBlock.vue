@@ -5,6 +5,7 @@
     :line="item"
     :decision="decision"
     @selectDecision="selectDecision"
+    @selectCharImage="selectCharImage"
   />
 </template>
 
@@ -12,6 +13,7 @@
 import StoryReaderRenderItem from "./StoryReaderRenderItem.vue";
 export default {
   props: ["renderBlock"],
+  emits: ["selectCharImage"],
   data() {
     return {
       decision: {},
@@ -20,6 +22,9 @@ export default {
   methods: {
     selectDecision({ id, value }) {
       this.decision[id] = value;
+    },
+    selectCharImage(image) {
+      this.$emit("selectCharImage", image);
     },
   },
   computed: {
@@ -40,20 +45,23 @@ export default {
             break;
           }
           case "PREDICATE": {
-            if (!item.params.references.includes(decision)) {
-              for (
-                let nextLine = i + 1;
-                nextLine < this.renderBlock.length;
-                nextLine++
-              ) {
-                let nextItem = this.renderBlock[nextLine];
-                if (nextItem.tag === "PREDICATE") {
-                  i = nextLine - 1;
-                  break;
-                } else {
-                  if (nextLine === this.renderBlock.length - 1) {
-                    i = nextLine;
+            let references = item.params.references;
+            if (decision) {
+              if (!references.includes(decision)) {
+                for (
+                  let nextLine = i + 1;
+                  nextLine < this.renderBlock.length;
+                  nextLine++
+                ) {
+                  let nextItem = this.renderBlock[nextLine];
+                  if (nextItem.tag === "PREDICATE") {
+                    i = nextLine - 1;
                     break;
+                  } else {
+                    if (nextLine === this.renderBlock.length - 1) {
+                      i = nextLine;
+                      break;
+                    }
                   }
                 }
               }

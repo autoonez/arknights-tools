@@ -1,5 +1,5 @@
 <template>
-  <v-row dense>
+  <v-row dense class="my-3">
     <v-col
       cols="12"
       v-for="(option, index) in line.params.options"

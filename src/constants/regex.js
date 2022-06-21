@@ -1,4 +1,4 @@
-export const tagRexEx = /\[(?<tag>.+?)\((?<params>.*)\)\]/;
+export const tagRexEx = /\[(?<tag>.+?)\((?<params>.*)\)\]\s*(?<other>.*)/g;
 export const otherTagRexEx = /\[(?<tag>.*)=(?<value>.*)\]/g;
 export const blankTagRexEx = /\[(?<tag>.*)\]/;
 export const splitParamsRegEx =

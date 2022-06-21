@@ -1,6 +1,8 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Home from "../views/Home.vue";
 const StoryReader = () => import("../views/StoryReader/StoryReader.vue");
+const MaterialPlanner = () =>
+  import("../views/MaterialPlanner/MaterialPlanner.vue");
 const routes = [
   {
     path: "/",
@@ -17,6 +19,11 @@ const routes = [
       storyIndex: route.query.storyIndex,
       server: route.query.server,
     }),
+  },
+  {
+    path: "/material-planner",
+    name: "Material Planner",
+    component: MaterialPlanner,
   },
 ];
 

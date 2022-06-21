@@ -10,29 +10,44 @@
 import { assetUrl } from "../../constants/url";
 import StorySelector from "../../components/StorySelector/StorySelector.vue";
 import StoryReaderMain from "./StoryReaderMain.vue";
+import { computed } from "vue";
 export default {
   props: ["storyType", "storyId", "storyIndex", "server"],
-  created() {
-    this.getStoryTable();
+  async created() {
+    this.loading = true;
+    await this.getStoryTable();
+    await this.getCharacterSpritesTable();
+    this.loading = false;
   },
   data() {
     return {
-      loading: false,
+      loading: true,
       storyTable: {},
+      charactersSprites: {},
       storyFile: {
         file: "",
         server: "",
       },
     };
   },
+  provide() {
+    return {
+      charactersSprites: computed(() => this.charactersSprites),
+    };
+  },
   methods: {
-    getStoryTable() {
-      this.loading = true;
-      fetch(`${assetUrl}/table/story_review_table.json`)
+    async getStoryTable() {
+      await fetch(`${assetUrl}/table/story_review_table.json`)
         .then((response) => response.json())
         .then((data) => {
           this.storyTable = data;
-          this.loading = false;
+        });
+    },
+    async getCharacterSpritesTable() {
+      await fetch(`${assetUrl}/table/characters_sprites_table.json`)
+        .then((response) => response.json())
+        .then((data) => {
+          this.charactersSprites = data;
         });
     },
     selectFile({ file, server }) {
@@ -42,6 +57,7 @@ export default {
       };
     },
   },
+
   components: { StorySelector, StoryReaderMain },
 };
 </script>

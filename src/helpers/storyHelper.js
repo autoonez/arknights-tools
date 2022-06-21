@@ -17,7 +17,7 @@ export const storyTextToObject = (text) => {
   };
   for (const line of lines) {
     if (line.match(tagRexEx)) {
-      let { tag, params } = tagRexEx.exec(line).groups;
+      let { tag, params, other } = tagRexEx.exec(line).groups;
       tag = tag.toUpperCase();
 
       let paramsResult = {};
@@ -25,6 +25,9 @@ export const storyTextToObject = (text) => {
       while ((result = splitParamsRegEx.exec(params)) !== null) {
         let { name, value } = result.groups;
         paramsResult[name] = value.replace(/"/g, "");
+      }
+      if (other) {
+        paramsResult["other"] = other;
       }
 
       storyData.lines.push({
