@@ -4,10 +4,10 @@
       <v-btn variant="outlined" @click="getResult" color="info"
         >Get result</v-btn
       >
-      <v-btn variant="outlined" @click="this.$emit('open-current-item-dialog')"
+      <v-btn variant="outlined" @click="showMaterialListDialog = true"
         >Current Item</v-btn
       >
-      <v-btn variant="outlined" @click="this.$emit('open-crafting-dialog')"
+      <v-btn variant="outlined" @click="showMaterialCraftingDialog = true"
         >Crafting</v-btn
       >
     </v-card-actions>
@@ -27,7 +27,7 @@
         :itemId="item.itemId"
         :number="item.number"
         :key="index"
-        @click="this.$emit('select-item', item.itemId)"
+        @click="selectItem(item.itemId)"
       />
     </v-card-text>
   </v-card>
@@ -47,17 +47,34 @@
       />
     </v-card-text>
   </v-card>
+  <MaterialDialog
+    v-model="showMaterialDialog"
+    :itemId="selectedItem"
+    @set="closeDialog"
+  />
+  <MaterialListDialog v-model="showMaterialListDialog" @set="closeDialog" />
+  <MaterialCraftingDialog
+    v-model="showMaterialCraftingDialog"
+    @set="closeDialog"
+  />
 </template>
 
 <script>
 import { mapGetters } from "vuex";
 import ItemWithNumber from "./ItemWithNumber.vue";
 import MaterialExpItem from "./MaterialExpItem.vue";
+import MaterialDialog from "./MaterialDialog.vue";
+import MaterialListDialog from "./MaterialListDialog.vue";
+import MaterialCraftingDialog from "./MaterialCraftingDialog.vue";
+
 export default {
-  emits: ["select-item", "open-current-item-dialog", "open-crafting-dialog"],
   data() {
     return {
       showAll: false,
+      selectedItem: "",
+      showMaterialDialog: false,
+      showMaterialListDialog: false,
+      showMaterialCraftingDialog: false,
       materials: [],
       lmd: 0,
       expItems: {
@@ -188,9 +205,25 @@ export default {
         }
       }
     },
+    selectItem(itemId) {
+      this.selectedItem = itemId;
+      this.showMaterialDialog = true;
+    },
+    closeDialog() {
+      this.showMaterialCraftingDialog = false;
+      this.showMaterialDialog = false;
+      this.showMaterialListDialog = false;
+      this.getResult();
+    },
   },
 
-  components: { ItemWithNumber, MaterialExpItem },
+  components: {
+    ItemWithNumber,
+    MaterialExpItem,
+    MaterialDialog,
+    MaterialListDialog,
+    MaterialCraftingDialog,
+  },
 };
 </script>
 

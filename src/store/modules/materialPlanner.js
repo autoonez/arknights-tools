@@ -223,22 +223,6 @@ export const getters = {
         }
       }
     }
-    // for (const [formulaId, value] of Object.entries(state.formula)) {
-    //   if (value > 0) {
-    //     let formula = rootState.workshopFormulaDataById[formulaId];
-    //     if (!(formula.itemId in item)) {
-    //       item[formula.itemId] = 0;
-    //     }
-    //     item[formula.itemId] += value * formula.count;
-    //     costs[4001] += formula.goldCost * value;
-    //     for (const item of formula.costs) {
-    //       if (!(item.id in costs)) {
-    //         costs[item.id] = 0;
-    //       }
-    //       costs[item.id] += value * item.count;
-    //     }
-    //   }
-    // }
     return { item, costs };
   },
 };
@@ -254,8 +238,14 @@ export const actions = {
             operatorId,
             TARGET: "MIN",
           });
-          sessionData.currentOperator[operatorId] = { ...operatorPlan };
-          sessionData.targetOperator[operatorId] = { ...operatorPlan };
+          sessionData.currentOperator[operatorId] = Object.assign(
+            {},
+            operatorPlan
+          );
+          sessionData.targetOperator[operatorId] = Object.assign(
+            {},
+            operatorPlan
+          );
         }
       }
       commit(SET_MATERIAL_PLANNER, sessionData);
@@ -267,8 +257,8 @@ export const actions = {
           operatorId,
           TARGET: "MIN",
         });
-        currentOperator[operatorId] = { ...operatorPlan };
-        targetOperator[operatorId] = { ...operatorPlan };
+        currentOperator[operatorId] = Object.assign({}, operatorPlan);
+        targetOperator[operatorId] = Object.assign({}, operatorPlan);
       }
       commit(SET_MATERIAL_PLANNER, {
         currentOperator,
@@ -280,8 +270,8 @@ export const actions = {
     { commit, state, rootState },
     { operatorId, type, phase, level, skillLevel, skillMastery, modules }
   ) {
-    let current = { ...state.currentOperator[operatorId] };
-    let target = { ...state.targetOperator[operatorId] };
+    let current = JSON.parse(JSON.stringify(state.currentOperator[operatorId]));
+    let target = JSON.parse(JSON.stringify(state.targetOperator[operatorId]));
 
     if (parseInt(phase) >= 0) {
       let operator = rootState.character.characterDataById[operatorId];
@@ -366,18 +356,26 @@ export const actions = {
     }
 
     for (const masteryLevel of Object.values(current.skillMastery)) {
-      if (parseInt(masteryLevel) > 0 && parseInt(current.phase) < 2) {
-        current.skillLevel = 7;
-        current.phase = 2;
-        current.level = 1;
+      if (parseInt(masteryLevel) > 0) {
+        if (current.skillLevel < 7) {
+          current.skillLevel = 7;
+        }
+        if (parseInt(current.phase) < 2) {
+          current.phase = 2;
+          current.level = 1;
+        }
         break;
       }
     }
     for (const masteryLevel of Object.values(target.skillMastery)) {
-      if (parseInt(masteryLevel) > 0 && parseInt(target.phase) < 2) {
-        target.skillLevel = 7;
-        target.phase = 2;
-        target.level = 1;
+      if (parseInt(masteryLevel) > 0) {
+        if (target.skillLevel < 7) {
+          target.skillLevel = 7;
+        }
+        if (parseInt(target.phase) < 2) {
+          target.phase = 2;
+          target.level = 1;
+        }
         break;
       }
     }
@@ -386,7 +384,7 @@ export const actions = {
       current.modules
     )) {
       let equipment = rootState.equipmentDataById[equipmentId];
-      if (equipmentLevel > 0 && current.phase < equipment.unlockEvolvePhase) {
+      if (equipmentLevel > 0 && current.phase <= equipment.unlockEvolvePhase) {
         current.phase = equipment.unlockEvolvePhase;
         if (current.level < equipment.unlockLevel) {
           current.level = equipment.unlockLevel;
@@ -397,7 +395,7 @@ export const actions = {
       target.modules
     )) {
       let equipment = rootState.equipmentDataById[equipmentId];
-      if (equipmentLevel > 0 && target.phase < equipment.unlockEvolvePhase) {
+      if (equipmentLevel > 0 && target.phase <= equipment.unlockEvolvePhase) {
         target.phase = equipment.unlockEvolvePhase;
         if (target.level < equipment.unlockLevel) {
           target.level = equipment.unlockLevel;
@@ -424,7 +422,7 @@ export const actions = {
         operatorId,
         TARGET: "MAX",
       });
-      targetOperator[operatorId] = { ...operatorPlan };
+      targetOperator[operatorId] = Object.assign({}, operatorPlan);
       selectedOperatorIds.push(operatorId);
     }
     commit(SET_SELECTED_OPERATOR_IDS, selectedOperatorIds);
@@ -433,7 +431,10 @@ export const actions = {
   [OPERATOR_PLAN_SET_TARGET_EQUAL_CURRENT]({ commit, state }) {
     let targetOperator = {};
     for (const operatorId of state.selectedOperatorIds) {
-      targetOperator[operatorId] = { ...state.currentOperator[operatorId] };
+      targetOperator[operatorId] = Object.assign(
+        {},
+        state.currentOperator[operatorId]
+      );
     }
     commit(SET_TARGET_OPERATOR_PLANS, targetOperator);
   },

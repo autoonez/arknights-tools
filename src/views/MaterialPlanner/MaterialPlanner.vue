@@ -13,11 +13,7 @@
         </v-expansion-panel>
         <v-expansion-panel title="Materials" value="ITEM">
           <v-expansion-panel-text>
-            <MaterialList
-              @selectItem="selectItem"
-              @open-current-item-dialog="showMaterialListDialog = true"
-              @open-crafting-dialog="showMaterialCraftingDialog = true"
-            />
+            <MaterialList />
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -26,23 +22,10 @@
         :id="selectedOperator"
         @set="showOperatorDialog = false"
       />
-      <MaterialDialog
-        v-model="showMaterialDialog"
-        :itemId="selectedItem"
-        @set="showMaterialDialog = false"
-      />
-      <MaterialListDialog
-        v-model="showMaterialListDialog"
-        @set="showMaterialListDialog = false"
-      />
       <CharacterSelectorDialog
         v-model="showCharacterSelectorDialog"
         :selected="selectedOperatorIds"
         @save="saveSelectedOperatorIds"
-      />
-      <MaterialCraftingDialog
-        v-model="showMaterialCraftingDialog"
-        @set="showMaterialCraftingDialog = false"
       />
     </v-container>
   </template>
@@ -52,9 +35,6 @@
 import OperatorSelectedList from "../../components/MaterialPlanner/OperatorSelectedList.vue";
 import OperatorDialog from "../../components/MaterialPlanner/OperatorDialog.vue";
 import MaterialList from "../../components/MaterialPlanner/MaterialList.vue";
-import MaterialDialog from "../../components/MaterialPlanner/MaterialDialog.vue";
-import MaterialListDialog from "../../components/MaterialPlanner/MaterialListDialog.vue";
-import MaterialCraftingDialog from "../../components/MaterialPlanner/MaterialCraftingDialog.vue";
 import {
   GAME_DATA_GET,
   CHARACTER_DATA_GET,
@@ -80,10 +60,6 @@ export default {
       panel: ["OPERATOR", "ITEM"],
       selectedOperator: "",
       showOperatorDialog: false,
-      selectedItem: "",
-      showMaterialDialog: false,
-      showMaterialListDialog: false,
-      showMaterialCraftingDialog: false,
       showCharacterSelectorDialog: false,
     };
   },
@@ -105,10 +81,6 @@ export default {
     selectOperator(id) {
       this.selectedOperator = id;
       this.showOperatorDialog = true;
-    },
-    selectItem(id) {
-      this.selectedItem = id;
-      this.showMaterialDialog = true;
     },
     saveSelectedOperatorIds(ids) {
       this.$store.dispatch(SELECTED_OPERATOR_IDS_CHANGE, ids);
@@ -173,10 +145,7 @@ export default {
     OperatorSelectedList,
     OperatorDialog,
     MaterialList,
-    MaterialDialog,
-    MaterialListDialog,
     CharacterSelectorDialog,
-    MaterialCraftingDialog,
   },
 };
 </script>
