@@ -6,6 +6,9 @@ import {
   SELECTED_OPERATOR_IDS_CHANGE,
   OPERATOR_PLAN_SET_TARGET_TO_MAX,
   OPERATOR_PLAN_SET_TARGET_EQUAL_CURRENT,
+  SELECTED_OPERATOR_TOGGLE,
+  OPERATOR_PLAN_SET,
+  OPERATOR_PLANS_SET,
 } from "../actions";
 import {
   SET_MATERIAL_PLANNER,
@@ -14,6 +17,7 @@ import {
   SET_OPERATOR_PLAN,
   SET_SELECTED_OPERATOR_IDS,
   SET_TARGET_OPERATOR_PLANS,
+  SET_OPERATOR_PLANS,
 } from "../mutations";
 
 export const state = {
@@ -74,157 +78,6 @@ export const getters = {
         level,
       };
     },
-  itemRequireById(state, getters, rootState) {
-    let itemRequire = {
-      itemRequireById: {
-        //itemId 4001 = LMD
-        4001: 0,
-      },
-      addItemSet(itemSet = {}) {
-        for (const [itemId, count] of Object.entries(itemSet)) {
-          if (!(itemId in this.itemRequireById)) {
-            this.itemRequireById[itemId] = 0;
-          }
-          this.itemRequireById[itemId] += count;
-        }
-      },
-      removeItemSet(itemSet = {}) {
-        for (const [itemId, count] of Object.entries(itemSet)) {
-          if (itemId in this.itemRequireById) {
-            this.itemRequireById[itemId] -= count;
-          }
-        }
-      },
-    };
-    let gameData = rootState.gameData;
-    let getExpItemRequire = (totalExp) => {
-      let expItems = Object.values(gameData.expItems).sort(
-        (a, b) => b.gainExp - a.gainExp
-      );
-      let result = expItems.reduce((byId, item) => {
-        byId[item.id] = 0;
-        return byId;
-      }, {});
-      for (const [index, item] of expItems.entries()) {
-        if (totalExp / item.gainExp > 0) {
-          let count = Math.floor(totalExp / item.gainExp);
-          result[item.id] += count;
-          totalExp -= item.gainExp * count;
-        } else if (totalExp > 0 && index === expItems.length - 1) {
-          result[item.id] += 1;
-        }
-      }
-      return result;
-    };
-    for (const operatorId of state.selectedOperatorIds) {
-      let data = rootState.itemUseByCharacterId[operatorId];
-      let operator = rootState.character.characterDataById[operatorId];
-      let current = state.currentOperator[operatorId];
-      let target = state.targetOperator[operatorId];
-
-      //phase
-      if (target.phase > 0) {
-        itemRequire.addItemSet(data.phases[target.phase]);
-      }
-      if (current.phase > 0) {
-        itemRequire.removeItemSet(data.phases[current.phase]);
-      }
-      let phaseDiff = target.phase - current.parse;
-      if (phaseDiff > 0) {
-        let evolveGoldCost = gameData.evolveGoldCost[operator.rarity];
-        itemRequire.addItemSet({
-          4001: evolveGoldCost
-            .reverse()
-            .slice(0, phaseDiff)
-            .reduce((sum, cost) => (sum += cost), 0),
-        });
-      }
-
-      //level
-      for (let phase = current.phase; phase <= target.phase; phase++) {
-        let maxLevel = gameData.maxLevel[operator.rarity][phase];
-        let currentLevel = phase === target.phase ? current.level : 1;
-        let targetLevel = phase === target.phase ? target.level : maxLevel;
-        if (targetLevel - currentLevel > 0) {
-          let characterUpgradeCostMap = gameData.characterUpgradeCostMap[phase];
-          let characterExpMap = gameData.characterExpMap[phase];
-          //lmd
-          itemRequire.addItemSet({
-            4001: characterUpgradeCostMap
-              .slice(currentLevel - 1, targetLevel - 1)
-              .reduce((sum, cost) => (sum += cost), 0),
-          });
-
-          //exp
-          let totalExp = characterExpMap
-            .slice(currentLevel - 1, targetLevel - 1)
-            .reduce((sum, exp) => (sum += exp), 0);
-          itemRequire.addItemSet(getExpItemRequire(totalExp));
-        }
-      }
-
-      //skillLevel
-      itemRequire.addItemSet(data.allSkillLvlup[target.skillLevel]);
-      itemRequire.removeItemSet(data.allSkillLvlup[current.skillLevel]);
-
-      //skillMastery
-      for (const skillId of Object.keys(data.skills)) {
-        if (target.skillMastery[skillId] > 0) {
-          itemRequire.addItemSet(
-            data.skills[skillId].levelUpCostCond[target.skillMastery[skillId]]
-          );
-        }
-        if (current.skillMastery[skillId] > 0) {
-          itemRequire.removeItemSet(
-            data.skills[skillId].levelUpCostCond[current.skillMastery[skillId]]
-          );
-        }
-      }
-
-      //equipment
-      for (const equipmentId of Object.keys(data.modules)) {
-        if (target.modules[equipmentId] > 0) {
-          itemRequire.addItemSet(
-            data.modules[equipmentId][target.modules[equipmentId]]
-          );
-        }
-        if (current.modules[equipmentId] > 0) {
-          itemRequire.removeItemSet(
-            data.modules[equipmentId][current.modules[equipmentId]]
-          );
-        }
-      }
-    }
-    return itemRequire.itemRequireById;
-  },
-  activeFormula(state, getters, rootState) {
-    //itemId 4001 = LMD
-    let item = {};
-    let costs = {
-      4001: 0,
-    };
-    for (const formulaType in state.itemFormula) {
-      for (const [formulaId, value] of Object.entries(
-        state.itemFormula[formulaType]
-      )) {
-        if (value > 0) {
-          let formula = rootState.itemFormulaDataById[formulaType][formulaId];
-          if (!(formula.itemId in item)) {
-            item[formula.itemId] = 0;
-          }
-          item[formula.itemId] += value * formula.count;
-          costs[4001] += formula.goldCost * value;
-          for (const item of formula.costs) {
-            if (!(item.id in costs)) {
-              costs[item.id] = 0;
-            }
-            costs[item.id] += value * item.count;
-          }
-        }
-      }
-    }
-    return { item, costs };
-  },
 };
 
 export const actions = {
@@ -414,6 +267,17 @@ export const actions = {
   [SELECTED_OPERATOR_IDS_CHANGE]({ commit }, ids) {
     commit(SET_SELECTED_OPERATOR_IDS, ids);
   },
+  [SELECTED_OPERATOR_TOGGLE]({ commit, state }, operatorId) {
+    let selectedOperatorIds = [...state.selectedOperatorIds];
+    if (selectedOperatorIds.includes(operatorId)) {
+      selectedOperatorIds = selectedOperatorIds.filter(
+        (id) => id !== operatorId
+      );
+    } else {
+      selectedOperatorIds.push(operatorId);
+    }
+    commit(SET_SELECTED_OPERATOR_IDS, selectedOperatorIds);
+  },
   [OPERATOR_PLAN_SET_TARGET_TO_MAX]({ commit, getters, rootGetters }) {
     let targetOperator = {};
     let selectedOperatorIds = [];
@@ -437,6 +301,81 @@ export const actions = {
       );
     }
     commit(SET_TARGET_OPERATOR_PLANS, targetOperator);
+  },
+  [OPERATOR_PLAN_SET]({ commit, getters, state }, { operatorId, type, value }) {
+    let current = JSON.parse(JSON.stringify(state.currentOperator[operatorId]));
+    let target = JSON.parse(JSON.stringify(state.targetOperator[operatorId]));
+    if (type === "CURRENT") {
+      if (value === "MAX") {
+        let plan = getters.getOperatorPlan({
+          operatorId,
+          TARGET: "MAX",
+        });
+        current = Object.assign({}, plan);
+        target = Object.assign({}, plan);
+      } else if (value === "MIN") {
+        current = Object.assign(
+          {},
+          getters.getOperatorPlan({
+            operatorId,
+            TARGET: "MIN",
+          })
+        );
+      }
+    } else if (type === "TARGET") {
+      if (value === "MIN") {
+        target = Object.assign({}, current);
+      } else if (value === "MAX") {
+        target = Object.assign(
+          {},
+          getters.getOperatorPlan({
+            operatorId,
+            TARGET: "MAX",
+          })
+        );
+      }
+    }
+    commit(SET_OPERATOR_PLAN, { operatorId, current, target });
+  },
+  [OPERATOR_PLANS_SET](
+    { commit, getters, state },
+    { operatorIds, type, value }
+  ) {
+    let current = JSON.parse(JSON.stringify(state.currentOperator));
+    let target = JSON.parse(JSON.stringify(state.targetOperator));
+    for (const operatorId of operatorIds) {
+      if (type === "CURRENT") {
+        if (value === "MAX") {
+          let plan = getters.getOperatorPlan({
+            operatorId,
+            TARGET: "MAX",
+          });
+          current[operatorId] = Object.assign({}, plan);
+          target[operatorId] = Object.assign({}, plan);
+        } else if (value === "MIN") {
+          current[operatorId] = Object.assign(
+            {},
+            getters.getOperatorPlan({
+              operatorId,
+              TARGET: "MIN",
+            })
+          );
+        }
+      } else if (type === "TARGET") {
+        if (value === "MIN") {
+          target[operatorId] = Object.assign({}, current);
+        } else if (value === "MAX") {
+          target[operatorId] = Object.assign(
+            {},
+            getters.getOperatorPlan({
+              operatorId,
+              TARGET: "MAX",
+            })
+          );
+        }
+      }
+      commit(SET_OPERATOR_PLANS, { current, target });
+    }
   },
 };
 
@@ -466,6 +405,10 @@ export const mutations = {
   [SET_OPERATOR_PLAN](state, { operatorId, current, target }) {
     state.currentOperator[operatorId] = current;
     state.targetOperator[operatorId] = target;
+  },
+  [SET_OPERATOR_PLANS](state, { current, target }) {
+    state.currentOperator = current;
+    state.targetOperator = target;
   },
   [SET_CURRENT_ITEM](state, { itemId, value }) {
     state.currentItem[itemId] = value;

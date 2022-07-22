@@ -3,6 +3,7 @@ export const SET_ITEM_DATA = "setItemData";
 export const SET_ITEM_USE_DATA = "setItemUseData";
 export const SET_EQUIPMENT_DATA = "setEquipmentData";
 export const SET_OPERATOR_PLAN = "setOperatorPlan";
+export const SET_OPERATOR_PLANS = "setOperatorPlans";
 export const SET_TARGET_OPERATOR_PLANS = "setTargetOperatorPlans";
 export const SET_TARGET_OPERATOR = "setCurrentOperator";
 export const SET_CURRENT_ITEM = "setCurrentItem";

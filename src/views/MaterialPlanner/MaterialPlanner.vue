@@ -1,40 +1,26 @@
 <template>
   <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
   <template v-if="!loading">
-    <v-container>
-      <v-expansion-panels v-model="panel" multiple>
-        <v-expansion-panel title="Operators" value="OPERATOR">
-          <v-expansion-panel-text>
-            <OperatorSelectedList
-              @selectOperator="selectOperator"
-              @openCharacterSelectorDialog="showCharacterSelectorDialog = true"
-            />
-          </v-expansion-panel-text>
-        </v-expansion-panel>
-        <v-expansion-panel title="Materials" value="ITEM">
-          <v-expansion-panel-text>
-            <MaterialList />
-          </v-expansion-panel-text>
-        </v-expansion-panel>
-      </v-expansion-panels>
-      <OperatorDialog
-        v-model="showOperatorDialog"
-        :id="selectedOperator"
-        @set="showOperatorDialog = false"
-      />
-      <CharacterSelectorDialog
-        v-model="showCharacterSelectorDialog"
-        :selected="selectedOperatorIds"
-        @save="saveSelectedOperatorIds"
-      />
-    </v-container>
+    <MaterialPlannerOperators v-show="panel === 'OPERATOR'" />
+    <MaterialPlannerItems v-show="panel === 'ITEM'" :panel="panel" />
+    <v-bottom-navigation
+      density="compact"
+      color="info"
+      v-model="panel"
+      mandatory
+    >
+      <v-btn value="OPERATOR"
+        ><v-icon class="mr-2">mdi-account</v-icon><span>Operators</span></v-btn
+      >
+      <v-btn value="ITEM"
+        ><v-icon class="mr-2">mdi-package-variant</v-icon
+        ><span>Items</span></v-btn
+      >
+    </v-bottom-navigation>
   </template>
 </template>
 
 <script>
-import OperatorSelectedList from "../../components/MaterialPlanner/OperatorSelectedList.vue";
-import OperatorDialog from "../../components/MaterialPlanner/OperatorDialog.vue";
-import MaterialList from "../../components/MaterialPlanner/MaterialList.vue";
 import {
   GAME_DATA_GET,
   CHARACTER_DATA_GET,
@@ -46,9 +32,10 @@ import {
   SELECTED_OPERATOR_IDS_CHANGE,
   CHARACTER_CLASS_GET,
 } from "../../store/actions";
-import CharacterSelectorDialog from "../../components/CharacterSelector/CharacterSelectorDialog.vue";
 import { mapGetters } from "vuex";
 import { computed } from "vue";
+import MaterialPlannerItems from "./MaterialPlannerItems.vue";
+import MaterialPlannerOperators from "./MaterialPlannerOperators.vue";
 
 export default {
   async created() {
@@ -57,7 +44,7 @@ export default {
   data() {
     return {
       loading: true,
-      panel: ["OPERATOR", "ITEM"],
+      panel: "OPERATOR",
       selectedOperator: "",
       showOperatorDialog: false,
       showCharacterSelectorDialog: false,
@@ -142,10 +129,8 @@ export default {
     };
   },
   components: {
-    OperatorSelectedList,
-    OperatorDialog,
-    MaterialList,
-    CharacterSelectorDialog,
+    MaterialPlannerItems,
+    MaterialPlannerOperators,
   },
 };
 </script>

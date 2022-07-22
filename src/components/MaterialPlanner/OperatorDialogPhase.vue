@@ -31,7 +31,7 @@ import { OPERATOR_PLAN_CHANGE } from "../../store/actions";
 
 export default {
   name: "OperatorDialogPhase",
-  props: ["operatorId"],
+  props: ["operator-id"],
   data() {
     return {};
   },

@@ -12,7 +12,7 @@
 import OperatorDialogEquipmentSlider from "./OperatorDialogEquipmentSlider.vue";
 export default {
   name: "OperatorDialogEquipment",
-  props: ["operatorId"],
+  props: ["operator-id"],
   data() {
     return {};
   },

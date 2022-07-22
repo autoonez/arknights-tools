@@ -1,16 +1,16 @@
 <template>
-  <v-btn class="character-class-icon" height="56px" width="56px">
+  <v-btn height="48px" width="48px">
     <div class="d-flex">
-      <img :src="imgSrc" />
+      <img :src="imgSrc" class="w-100" />
     </div>
   </v-btn>
 </template>
 
 <script>
-import { assetUrl } from "../../constants/url";
+import { assetUrl } from "../constants/url";
 
 export default {
-  name: "CharacterSubClass",
+  name: "OperatorSubClassIcon",
   props: ["subClassId"],
   computed: {
     imgSrc() {

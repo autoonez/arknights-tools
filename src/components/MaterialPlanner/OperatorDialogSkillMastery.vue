@@ -11,7 +11,7 @@
 import OperatorDialogSkillMasterySlider from "./OperatorDialogSkillMasterySlider.vue";
 export default {
   name: "OperatorDialogSkillMastery",
-  props: ["operatorId"],
+  props: ["operator-id"],
   data() {
     return {};
   },

@@ -17,6 +17,7 @@ import {
   SET_SELECTED_OPERATOR_IDS,
   SET_GAME_DATA,
   SET_TARGET_OPERATOR_PLANS,
+  SET_OPERATOR_PLANS,
 } from "./mutations";
 import character from "./modules/character";
 import item from "./modules/item";
@@ -82,6 +83,7 @@ store.subscribe((mutation, state) => {
       SET_MATERIAL_PLANNER,
       SET_SELECTED_OPERATOR_IDS,
       SET_OPERATOR_PLAN,
+      SET_OPERATOR_PLANS,
       SET_TARGET_OPERATOR_PLANS,
       SET_CURRENT_ITEM,
       SET_ITEM_FORMULA_VALUE,

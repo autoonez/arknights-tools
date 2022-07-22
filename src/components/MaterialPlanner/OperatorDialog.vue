@@ -1,8 +1,8 @@
 <template>
-  <v-dialog v-model="show" fullscreen scrollable class="dialog">
+  <v-dialog fullscreen scrollable class="dialog">
     <v-card>
       <v-toolbar>
-        <v-btn icon dark @click="show = false">
+        <v-btn icon dark @click="this.$emit('close')">
           <v-icon>mdi-close</v-icon>
         </v-btn>
         <v-toolbar-title>{{ operator.appellation }}</v-toolbar-title>
@@ -34,17 +34,9 @@ import OperatorDialogSkillMastery from "./OperatorDialogSkillMastery.vue";
 import OperatorDialogEquipment from "./OperatorDialogEquipment.vue";
 
 export default {
-  props: ["value", "id"],
-  emits: ["set"],
+  props: ["id"],
+  emits: ["close"],
   computed: {
-    show: {
-      get() {
-        return this.value;
-      },
-      set(value) {
-        this.$emit("set", value);
-      },
-    },
     operator() {
       return this.$store.state.character.characterDataById[this.id];
     },

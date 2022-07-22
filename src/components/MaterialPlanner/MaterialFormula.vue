@@ -1,45 +1,45 @@
 <template>
-  <v-card variant="outlined" class="mt-4 pa-4">
-    <v-row>
-      <v-col cols="12" sm="4">
-        <v-card variant="outlined" class="d-flex flex-wrap justify-center">
-          <ItemWithNumber
-            :itemId="formulaData.itemId"
-            :number="formulaData.count * formulaAmount"
-          />
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="4">
-        <v-text-field
-          type="number"
-          v-model="formulaAmount"
-          :max="max + formulaAmount"
-          :min="0"
-          hide-details
-          class="w-100"
-        ></v-text-field>
-      </v-col>
-      <v-col cols="12" sm="4">
-        <v-card variant="outlined" class="d-flex flex-wrap justify-center">
-          <ItemWithNumber
-            v-for="(item, index) in costs"
-            :key="index"
-            :itemId="item.itemId"
-            :number="item.count"
-          />
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-card>
+  <v-container :style="{ minWidth: '176px' }">
+    <div class="d-flex justify-center mb-4">
+      <ItemWithNumber
+        :itemId="formulaData.itemId"
+        :number="formulaData.count * formulaAmount"
+      />
+    </div>
+    <v-text-field
+      type="number"
+      variant="outlined"
+      v-model="formulaAmount"
+      :max="itemRequire + formulaAmount"
+      :min="0"
+      single-line
+      hide-details
+      class="w-100 mb-4"
+    ></v-text-field>
+    <div class="material-container">
+      <ItemWithNumber
+        v-for="(item, index) in costs"
+        :key="index"
+        :itemId="item.itemId"
+        :number="item.count"
+      />
+    </div>
+  </v-container>
 </template>
 
 <script>
-import { ITEM_FORMULA_CHANGE } from "../../store/actions";
-import ItemWithNumber from "./ItemWithNumber.vue";
+import ItemWithNumber from "../ItemWithNumber.vue";
 
 export default {
   name: "MaterialFormula",
-  props: ["formulaType", "formulaId", "max"],
+  props: ["formulaType", "formulaId"],
+  emits: ["changeFormula"],
+  inject: [
+    "craftingFormula",
+    "craftingItem",
+    "itemRequireFromCharacter",
+    "itemRequireFromCrafting",
+  ],
   data() {
     return {};
   },
@@ -52,16 +52,16 @@ export default {
     formulaAmount: {
       get() {
         return (
-          this.$store.state.materialPlanner.itemFormula[this["formulaType"]][
-            this["formulaId"]
-          ] || 0
+          this.craftingFormula[this["formulaType"]][this["formulaId"]] || 0
         );
       },
       set(value) {
-        this.$store.dispatch(ITEM_FORMULA_CHANGE, {
-          formulaId: this["formulaId"],
-          formulaType: this["formulaType"],
-          value,
+        this.$emit("changeFormula", {
+          formulaType: this.formulaType,
+          formulaId: this.formulaId,
+          oldValue:
+            this.craftingFormula[this["formulaType"]][this["formulaId"]] || 0,
+          newValue: value,
         });
       },
     },
@@ -71,7 +71,24 @@ export default {
         count: item.count * this.formulaAmount,
       }));
     },
+    itemRequire() {
+      let itemId = this.formulaData.itemId;
+      let requireFromCharacter = this.itemRequireFromCharacter[itemId] || 0;
+      let requireFromCrafting = this.itemRequireFromCrafting[itemId] || 0;
+      let crafting = this.craftingItem[itemId] || 0;
+      let current = this.$store.state.materialPlanner.currentItem[itemId] || 0;
+      return requireFromCharacter + requireFromCrafting - current - crafting;
+    },
   },
   components: { ItemWithNumber },
 };
 </script>
+
+<style scoped>
+.material-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 48px);
+  grid-row-gap: 16px;
+  justify-content: center;
+}
+</style>

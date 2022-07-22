@@ -29,7 +29,7 @@ import { OPERATOR_PLAN_CHANGE } from "../../store/actions";
 
 export default {
   name: "OperatorDialogLevel",
-  props: ["operatorId"],
+  props: ["operator-id"],
   data() {
     return {};
   },

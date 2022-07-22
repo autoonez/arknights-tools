@@ -44,8 +44,8 @@ export default {
 <style scoped>
 .current-item-img-wrap {
   display: flex;
-  height: 64px;
-  width: 64px;
+  height: 48px;
+  width: 48px;
 }
 .current-item-input-label {
   width: 100%;

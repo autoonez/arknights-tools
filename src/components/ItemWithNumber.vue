@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { assetUrl } from "../../constants/url";
+import { assetUrl } from "../constants/url";
 
 export default {
   props: ["itemId", "number"],
@@ -32,8 +32,8 @@ export default {
 <style scoped>
 .item {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
