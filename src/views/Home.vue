@@ -1,5 +1,17 @@
 <template>
   <v-container>
+    <p>Current project</p>
+    <ul>
+      <li>
+        <router-link
+          :to="{
+            name: 'select-story-type',
+          }"
+          >Story Reader</router-link
+        >
+      </li>
+    </ul>
+    <v-divider></v-divider>
     <p>Credits:</p>
     <ul>
       <li>
