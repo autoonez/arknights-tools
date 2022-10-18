@@ -14,7 +14,11 @@ const StorySelectorCharacter = () =>
   import("../components/StoryReader/StorySelectorCharacter.vue");
 const StorySelectorStorySet = () =>
   import("../components/StoryReader/StorySelectorStorySet.vue");
+const GoogleSheets = () =>
+  import("../views/StoryReader/StoryReaderGoogleSheets.vue");
 const StoryRender = () => import("../components/StoryReader/StoryRender.vue");
+
+const StoryDownload = () => import("../views/StoryDownload/StoryDownload.vue");
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -67,15 +71,26 @@ export const routes: Array<RouteRecordRaw> = [
         }),
       },
       {
+        path: "google-sheets",
+        name: "google-sheets",
+        component: GoogleSheets,
+      },
+      {
         path: "story",
         name: "render-story",
         component: StoryRender,
         props: (route) => ({
           storyFile: route.query.storyFile,
           storySetId: route.query.storySetId,
+          type: route.query.type,
         }),
       },
     ],
+  },
+  {
+    path: "/story-download",
+    name: "Story Download",
+    component: StoryDownload,
   },
 ];
 

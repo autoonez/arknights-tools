@@ -16,7 +16,7 @@ export default defineComponent({
   props: ["characterId", "characterName", "isSelected"],
   setup(props) {
     return {
-      imgSrc: `${assetUrl}/images/avatar/${props.characterId}.png`,
+      imgSrc: `${assetUrl}/images/avatar/${props.characterId}.webp`,
     };
   },
 });

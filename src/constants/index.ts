@@ -20,6 +20,11 @@ export const storyType = [
     routeName: "select-story-character",
     name: "Operator Records",
   },
+  {
+    id: "GOOGLE_SHEETS",
+    routeName: "google-sheets",
+    name: "Google Sheets",
+  },
 ];
 
 export const storyTypeDict: {
@@ -73,3 +78,11 @@ export enum StoryTypeEnum {
   MAIN_STORY = "MAIN_STORY",
   CHARACTER_STORY = "CHARACTER_STORY",
 }
+
+export const textTags = [
+  "DIALOG",
+  "DESCRIPTION",
+  "SUBTITLE",
+  "STICKER",
+  "MULTILINE",
+];

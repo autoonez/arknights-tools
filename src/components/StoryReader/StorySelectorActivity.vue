@@ -42,7 +42,7 @@ export default defineComponent({
       ActivityStorySetDetail[]
     >;
     const getImageSrc = (entryPic: string) => {
-      return `${assetUrl}/images/storyEntryPic/activity/${entryPic}.png`;
+      return `${assetUrl}/images/storyEntryPic/activity/${entryPic}.webp`;
     };
 
     return {

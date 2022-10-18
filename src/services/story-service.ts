@@ -4,10 +4,8 @@ import {
   blankTagRexEx,
   splitParamsRegEx,
   characterSpeechRexEx,
-  assetUrl,
+  textTags,
 } from "../constants";
-import mergeImages from "merge-images";
-import { useCharacterSpriteTableStore } from "../stores/CharacterSpriteTableStore";
 
 export const storyTextToObject = (text: string) => {
   let storyData: StoryData = { lines: [], tagCount: {}, otherLines: [] };
@@ -72,10 +70,10 @@ export const storyTextToObject = (text: string) => {
           }
 
           storyData.lines.push({
-            tag: "CHARACTER_SPEECH",
+            tag: "DIALOG",
             params: { ...paramsResult, name, text },
           });
-          addTag("CHARACTER_SPEECH");
+          addTag("DIALOG");
         }
       } else {
         if (line.match(otherTagRexEx)) {
@@ -126,6 +124,168 @@ export const storyTextToObject = (text: string) => {
   return storyData;
 };
 
+const spreadsheetOptionRegEx = /\[OPTION (?<value>.*)\]/g;
+
+export const spreadsheetToJson = (
+  lines: Array<Array<string>>
+): {
+  result?: StoryData;
+  error?: string;
+} => {
+  let error = "";
+  let result: StoryData = {
+    lines: [],
+    tagCount: {},
+    otherLines: [],
+  };
+
+  try {
+    const layoutLine = lines.find((line) => line[0] === "[LAYOUT]");
+
+    if (layoutLine) {
+      const nameColumn = layoutLine.indexOf("[NAME]");
+      const textColumn = layoutLine.indexOf("[TEXT]");
+
+      if (nameColumn && textColumn) {
+        for (let index = 0; index < lines.length; index++) {
+          const line = lines[index];
+          let tag = line[0] || "";
+          tag = tag.replace(/[\[\]]/g, "");
+          const name = line[nameColumn];
+          const text = line[textColumn];
+
+          if (textTags.includes(tag)) {
+            result.lines.push({
+              tag,
+              params: {
+                name,
+                text,
+              },
+            });
+
+            tag in result.tagCount
+              ? (result.tagCount[tag] = result.tagCount[tag] + 1)
+              : (result.tagCount[tag] = 1);
+          } else if (tag === "DECISION") {
+            let options = [];
+            let values = [];
+
+            for (
+              let nextIndex = index + 1;
+              nextIndex < lines.length;
+              nextIndex++
+            ) {
+              const nextLine = lines[nextIndex];
+
+              if (nextLine[0] === "[END_DECISION]") {
+                result.lines.push({
+                  tag: "DECISION",
+                  params: {
+                    options: options.join(";"),
+                    values: values.join(";"),
+                  },
+                });
+
+                "DECISION" in result.tagCount
+                  ? (result.tagCount["DECISION"] =
+                      result.tagCount["DECISION"] + 1)
+                  : (result.tagCount["DECISION"] = 1);
+
+                index = nextIndex;
+                break;
+              }
+
+              if (nextLine[0].match(spreadsheetOptionRegEx)) {
+                const regExResult = spreadsheetOptionRegEx.exec(nextLine[0]);
+                if (regExResult) {
+                  const value = regExResult.groups?.value;
+                  values.push(value);
+                  options.push(nextLine[textColumn]);
+                }
+              }
+            }
+          }
+        }
+
+        return {
+          result,
+        };
+      } else {
+        return {
+          error: "[NAME] or [TEXT] not found",
+        };
+      }
+    } else {
+      return {
+        error: "[LAYOUT] not found",
+      };
+    }
+  } catch (e: any) {
+    return {
+      error: e.message,
+    };
+  }
+};
+
+export const replaceStoryText = ({
+  original,
+  target,
+}: {
+  original: StoryLine[];
+  target: StoryLine[];
+}) => {
+  let result: StoryLine[] = [];
+
+  let targetStoryLineByTag: {
+    [storyTag: string]: StoryLine[];
+  } = {};
+  let targetStoryLineByTagIndex: {
+    [storyTag: string]: number;
+  } = {};
+
+  for (const line of target) {
+    if (!(line.tag in targetStoryLineByTag)) {
+      targetStoryLineByTag[line.tag] = [];
+      targetStoryLineByTagIndex[line.tag] = 0;
+    }
+    targetStoryLineByTag[line.tag].push(line);
+  }
+
+  for (const line of original) {
+    if (line.tag in targetStoryLineByTag) {
+      if (
+        targetStoryLineByTagIndex[line.tag] <
+          targetStoryLineByTag[line.tag].length &&
+        Object.keys(line.params).length > 0
+      ) {
+        const targetLine =
+          targetStoryLineByTag[line.tag][targetStoryLineByTagIndex[line.tag]];
+
+        const newLine = line;
+        if (line.params.name && targetLine.params.name) {
+          newLine.params.name = targetLine.params.name;
+        }
+        if (line.params.text && targetLine.params.text) {
+          newLine.params.text = targetLine.params.text;
+        }
+        //DECISION
+        if (line.params.options && targetLine.params.options) {
+          newLine.params.options = targetLine.params.options;
+        }
+
+        result.push(newLine);
+        targetStoryLineByTagIndex[line.tag] += 1;
+      } else {
+        result.push(line);
+      }
+    } else {
+      result.push(line);
+    }
+  }
+
+  return result;
+};
+
 export const getCharNameAndNumFromSpriteName = (SpriteName: string) => {
   let num = "1";
   let group = "1";
@@ -147,35 +307,15 @@ export const getCharNameAndNumFromSpriteName = (SpriteName: string) => {
   };
 };
 
-export const storyDataToRenderBlocks = async (storyData: StoryData) => {
-  const { characterSpriteTable } = useCharacterSpriteTableStore();
+export const storyDataToRenderBlocks = async (storyLines: StoryLine[]) => {
   let renderBlocks = [];
-  let imagesUrl: {
-    [key: string]: {
-      [key: string]: string;
-    };
-    IMAGE: {
-      [key: string]: string;
-    };
-    BACKGROUND: {
-      [key: string]: string;
-    };
-    CHARACTER: {
-      [key: string]: string;
-    };
-  } = {
-    IMAGE: {},
-    BACKGROUND: {},
-    CHARACTER: {},
-  };
-
   let renderBlock: StoryLine[] = [];
   let lastLine;
   let lastDecision;
   let charImage = "";
 
-  for (let i = 0; i < storyData.lines.length; i++) {
-    let line = storyData.lines[i];
+  for (let i = 0; i < storyLines.length; i++) {
+    let line = storyLines[i];
     switch (line.tag) {
       case "DESCRIPTION": {
         if (!lastLine) {
@@ -225,7 +365,12 @@ export const storyDataToRenderBlocks = async (storyData: StoryData) => {
         }
         break;
       }
-      case "CHARACTER_SPEECH": {
+      case "DIALOG": {
+        //Check if blank dialog tag
+        if (!line.params.text) {
+          break;
+        }
+
         let params = {
           ...line.params,
           text: [line.params.text],
@@ -233,13 +378,13 @@ export const storyDataToRenderBlocks = async (storyData: StoryData) => {
         };
         if (!lastLine) {
           lastLine = {
-            tag: "CHARACTER_SPEECH",
+            tag: "DIALOG",
             params,
           };
         } else {
           if (
-            lastLine.tag === "CHARACTER_SPEECH" &&
-            lastLine.params?.name.localeCompare(line.params.name, undefined, {
+            lastLine.tag === "DIALOG" &&
+            lastLine.params?.name?.localeCompare(line.params.name, undefined, {
               sensitivity: "base",
             }) === 0
           ) {
@@ -247,7 +392,7 @@ export const storyDataToRenderBlocks = async (storyData: StoryData) => {
           } else {
             renderBlock.push(lastLine);
             lastLine = {
-              tag: "CHARACTER_SPEECH",
+              tag: "DIALOG",
               params,
             };
           }
@@ -256,7 +401,7 @@ export const storyDataToRenderBlocks = async (storyData: StoryData) => {
       }
       case "MULTILINE": {
         let thisLine = {
-          tag: "CHARACTER_SPEECH",
+          tag: "DIALOG",
           params: {
             ...line.params,
             text: [line.params.other],
@@ -360,73 +505,73 @@ export const storyDataToRenderBlocks = async (storyData: StoryData) => {
       }
     }
     //preload images
-    if (["IMAGE", "BACKGROUND", "CHARACTER"].includes(line.tag)) {
-      if (["IMAGE", "BACKGROUND"].includes(line.tag)) {
-        if (line.params.image) {
-          if (!(line.params.image in imagesUrl[line.tag])) {
-            let image = new Image();
-            let url = "";
-            if (line.tag === "IMAGE") {
-              url = `${assetUrl}/images/avg/imgs/${line.params.image}.png`;
-            }
-            if (line.tag === "BACKGROUND") {
-              url = `${assetUrl}/images/avg/bg/${line.params.image}.png`;
-            }
-            image.src = url;
-            imagesUrl[line.tag][line.params.image] = url;
-          }
-        }
-      } else if (line.tag === "CHARACTER") {
-        if (characterSpriteTable) {
-          if (!(charImage in imagesUrl["CHARACTER"]) && charImage) {
-            let url = "";
-            let file;
-            let { name, num, group } =
-              getCharNameAndNumFromSpriteName(charImage);
-            name = name.toLocaleLowerCase();
-            num = num.trim();
-            group = group.trim();
-            let charSpriteHub = characterSpriteTable[name];
-            if (charSpriteHub[group]["sprites"][num]["isWholeBody"] === 0) {
-              let baseNum = Object.keys(charSpriteHub[group]["sprites"])[
-                Object.keys(charSpriteHub[group]["sprites"]).length - 1
-              ];
-              if (baseNum !== num) {
-                let baseFile =
-                  charSpriteHub[group]["sprites"][baseNum]["sprite"];
-                let baseSrc = `${assetUrl}/images/avg/characters/${name}/${baseFile}`;
+    // if (["IMAGE", "BACKGROUND", "CHARACTER"].includes(line.tag)) {
+    //   if (["IMAGE", "BACKGROUND"].includes(line.tag)) {
+    //     if (line.params.image) {
+    //       if (!(line.params.image in imagesUrl[line.tag])) {
+    //         let image = new Image();
+    //         let url = "";
+    //         if (line.tag === "IMAGE") {
+    //           url = `${assetUrl}/images/avg/imgs/${line.params.image}.webp`;
+    //         }
+    //         if (line.tag === "BACKGROUND") {
+    //           url = `${assetUrl}/images/avg/bg/${line.params.image}.webp`;
+    //         }
+    //         image.src = url;
+    //         imagesUrl[line.tag][line.params.image] = url;
+    //       }
+    //     }
+    //   } else if (line.tag === "CHARACTER") {
+    //     if (characterSpriteTable) {
+    //       if (!(charImage in imagesUrl["CHARACTER"]) && charImage) {
+    //         let url = "";
+    //         let file;
+    //         let { name, num, group } =
+    //           getCharNameAndNumFromSpriteName(charImage);
+    //         name = name.toLocaleLowerCase();
+    //         num = num.trim();
+    //         group = group.trim();
+    //         let charSpriteHub = characterSpriteTable[name];
+    //         if (charSpriteHub[group]["sprites"][num]["isWholeBody"] === 0) {
+    //           let baseNum = Object.keys(charSpriteHub[group]["sprites"])[
+    //             Object.keys(charSpriteHub[group]["sprites"]).length - 1
+    //           ];
+    //           if (baseNum !== num) {
+    //             let baseFile =
+    //               charSpriteHub[group]["sprites"][baseNum]["sprite"];
+    //             let baseSrc = `${assetUrl}/images/avg/characters/${name}/${baseFile}`;
 
-                let faceFile = charSpriteHub[group]["sprites"][num]["sprite"];
-                let faceSrc = `${assetUrl}/images/avg/characters/${name}/${faceFile}`;
+    //             let faceFile = charSpriteHub[group]["sprites"][num]["sprite"];
+    //             let faceSrc = `${assetUrl}/images/avg/characters/${name}/${faceFile}`;
 
-                url = await mergeImages(
-                  [
-                    {
-                      src: baseSrc,
-                      x: 0,
-                      y: 0,
-                    },
-                    {
-                      src: faceSrc,
-                      x: charSpriteHub[group]["facePos"]["x"],
-                      y: charSpriteHub[group]["facePos"]["y"],
-                    },
-                  ],
-                  {
-                    crossOrigin: "anonymous",
-                    format: "image/webp",
-                  }
-                );
-              }
-            } else {
-              file = charSpriteHub[group]["sprites"][num]["sprite"];
-              url = `${assetUrl}/images/avg/characters/${name}/${file}`;
-            }
-            imagesUrl["CHARACTER"][charImage] = url;
-          }
-        }
-      }
-    }
+    //             url = await mergeImages(
+    //               [
+    //                 {
+    //                   src: baseSrc,
+    //                   x: 0,
+    //                   y: 0,
+    //                 },
+    //                 {
+    //                   src: faceSrc,
+    //                   x: charSpriteHub[group]["facePos"]["x"],
+    //                   y: charSpriteHub[group]["facePos"]["y"],
+    //                 },
+    //               ],
+    //               {
+    //                 crossOrigin: "anonymous",
+    //                 format: "image/webp",
+    //               }
+    //             );
+    //           }
+    //         } else {
+    //           file = charSpriteHub[group]["sprites"][num]["sprite"];
+    //           url = `${assetUrl}/images/avg/characters/${name}/${file}`;
+    //         }
+    //         imagesUrl["CHARACTER"][charImage] = url;
+    //       }
+    //     }
+    //   }
+    // }
   }
   if (lastLine && renderBlock[renderBlock.length - 1] !== lastLine) {
     renderBlock.push(lastLine);
@@ -435,8 +580,5 @@ export const storyDataToRenderBlocks = async (storyData: StoryData) => {
   if (renderBlocks[renderBlocks.length - 1] !== renderBlock)
     renderBlocks.push(renderBlock);
 
-  return {
-    renderBlocks,
-    imagesUrl,
-  };
+  return renderBlocks;
 };

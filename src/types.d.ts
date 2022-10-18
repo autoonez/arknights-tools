@@ -139,3 +139,30 @@ interface CharacterSpriteTable {
     };
   };
 }
+
+interface GoogleSpreadsheetSheetProperties {
+  sheetId: number;
+  title: string;
+  index: number;
+}
+
+interface GoogleSpreadsheetSheet {
+  properties: GoogleSpreadsheetSheetProperties;
+}
+
+interface GoogleSpreadsheet {
+  sheets: GoogleSpreadsheetSheet[];
+  spreadsheetUrl: string;
+  spreadsheetId: string;
+  properties: {
+    title: string;
+  };
+}
+
+interface SpreadsheetStore {
+  id: string;
+  title: string;
+  url: string;
+  sheets: string[];
+  currentSheet: number;
+}

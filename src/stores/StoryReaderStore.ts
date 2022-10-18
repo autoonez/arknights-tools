@@ -34,13 +34,25 @@ export const useStoryReaderStore = defineStore("StoryReaderStore", () => {
       const story = storySet.value.story[storyId];
       if (story) {
         if (story?.code) {
-          title = `${story.code}: ${story.name[language.value]}`;
+          title = `${story.code}: ${
+            story.name[language.value] || story.name["zh_CN"]
+          }`;
         } else {
           title = `${story.name[language.value]}`;
         }
 
         return title;
       }
+    }
+  };
+
+  const spreadsheet: Ref<SpreadsheetStore | undefined> = ref();
+  const setSpreadsheet = (value: SpreadsheetStore) => {
+    spreadsheet.value = value;
+  };
+  const setSpreadsheetCurrentSheet = (index: number) => {
+    if (spreadsheet.value) {
+      spreadsheet.value.currentSheet = index;
     }
   };
 
@@ -52,5 +64,8 @@ export const useStoryReaderStore = defineStore("StoryReaderStore", () => {
     story,
     setStory,
     getStoryTitle,
+    spreadsheet,
+    setSpreadsheet,
+    setSpreadsheetCurrentSheet,
   };
 });

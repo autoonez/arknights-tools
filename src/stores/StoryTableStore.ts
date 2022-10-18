@@ -5,6 +5,7 @@ import { HTTP } from "../services/http-service";
 
 export const useStoryTableStore = defineStore("StoryTableStore", () => {
   const storyTable: Ref<StoryTable | undefined> = ref();
+  const storyList: Ref<string[]> = ref([]);
 
   const getStoryTable = async () => {
     if (!storyTable.value) {
@@ -18,6 +19,14 @@ export const useStoryTableStore = defineStore("StoryTableStore", () => {
     if (storyTable.value) {
       return Object.values(storyTable.value?.story).filter(
         (story) => story.type === type
+      );
+    }
+  };
+
+  const getStoryList = async () => {
+    if (storyList.value.length === 0) {
+      storyList.value = await HTTP.get("table/all_story.json").then(
+        (response) => response.data
       );
     }
   };
@@ -97,10 +106,12 @@ export const useStoryTableStore = defineStore("StoryTableStore", () => {
 
   return {
     storyTable,
+    storyList,
     getStoryTable,
     getStoryByType,
     getMainStoryByChapter,
     getStorySetByCharacterId,
     getCharacterStorySet,
+    getStoryList,
   };
 });

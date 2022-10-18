@@ -8,6 +8,7 @@
           query: {
             storyFile: story.file,
             storySetId,
+            type: 'original'
           },
         }"
       >

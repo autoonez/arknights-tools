@@ -1,14 +1,19 @@
 <template>
-  <template
-    v-for="(line, index) in renderBlock"
-    :key="index"
-    v-show="lineIndexsToShow.includes(index)"
-  >
-    <TagDescription v-if="line.tag === 'DESCRIPTION'" :line="line" />
-    <TagSubtitle v-else-if="line.tag === 'SUBTITLE'" :line="line" />
-    <TagCharacterSpeech
-      v-else-if="line.tag === 'CHARACTER_SPEECH'"
+  <template v-for="(line, index) in renderBlock" :key="index">
+    <TagDescription
+      v-if="line.tag === 'DESCRIPTION'"
       :line="line"
+      v-show="lineIndexsToShow.includes(index)"
+    />
+    <TagSubtitle
+      v-else-if="line.tag === 'SUBTITLE'"
+      :line="line"
+      v-show="lineIndexsToShow.includes(index)"
+    />
+    <TagCharacterSpeech
+      v-else-if="line.tag === 'DIALOG'"
+      :line="line"
+      v-show="lineIndexsToShow.includes(index)"
       @select-char-image="
         (value) => {
           $emit('selectCharImage', value);
@@ -18,6 +23,7 @@
     <TagDecision
       v-else-if="line.tag === 'DECISION'"
       :line="line"
+      v-show="lineIndexsToShow.includes(index)"
       :decision="decisionByLineIndex[index]"
       @select-decision="
         (value) => {
@@ -31,6 +37,7 @@
     <TagImage
       v-else-if="['IMAGE', 'BACKGROUND'].includes(line.tag)"
       :line="line"
+      v-show="lineIndexsToShow.includes(index)"
     />
   </template>
 </template>

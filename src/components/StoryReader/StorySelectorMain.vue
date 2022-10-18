@@ -46,7 +46,7 @@ export default defineComponent({
       return `Episode ${id.split("_")[1]}`;
     };
     const getImageSrc = (id: string) => {
-      return `${assetUrl}/images/storyEntryPic/main/zone_page_${id}.png`;
+      return `${assetUrl}/images/storyEntryPic/main/zone_page_${id}.webp`;
     };
 
     return {

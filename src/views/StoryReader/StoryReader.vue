@@ -37,7 +37,7 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const store = useStoryReaderStore();
-    const { getStoryTable } = useStoryTableStore();
+    const { getStoryTable, getStoryList } = useStoryTableStore();
     const { getCharacterTable } = useCharactertore();
     const { getCharacterSpriteTable } = useCharacterSpriteTableStore();
     const loading = ref(true);
@@ -48,6 +48,7 @@ export default defineComponent({
       loading.value = true;
       try {
         await getStoryTable();
+        await getStoryList();
         await getCharacterTable();
         await getCharacterSpriteTable();
       } catch (error) {
@@ -65,7 +66,7 @@ export default defineComponent({
         () => {
           if (route.name === "select-story") {
             if (store.storySet) {
-              let title = store.storySet.name[store.language];
+              let title = store.storySet.name[store.language || "zh_CN"];
               if (title) {
                 document.title = title;
               } else {

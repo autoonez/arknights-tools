@@ -16,13 +16,13 @@ export default defineComponent({
       let src = "";
       if (props.line?.params.image) {
         if (props.line?.tag === "IMAGE") {
-          src = `${assetUrl}/images/avg/imgs/${props.line?.params.image}.png`;
+          src = `${assetUrl}/images/avg/imgs/${props.line?.params.image}.webp`;
         }
         if (props.line?.tag === "BACKGROUND") {
-          src = `${assetUrl}/images/avg/bg/${props.line?.params.image}.png`;
+          src = `${assetUrl}/images/avg/bg/${props.line?.params.image}.webp`;
         }
       } else {
-        src = `${assetUrl}/images/avg/bg/bg_black.png`;
+        src = `${assetUrl}/images/avg/bg/bg_black.webp`;
       }
       return src;
     });
