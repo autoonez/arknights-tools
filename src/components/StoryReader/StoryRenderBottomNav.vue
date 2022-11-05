@@ -53,6 +53,7 @@ export default defineComponent({
             query: {
               storyFile: previousStory.file,
               storySetId: storySet.value.id,
+              type: 'original',
             },
           });
         }
@@ -74,6 +75,7 @@ export default defineComponent({
             query: {
               storyFile: nextStory.file,
               storySetId: storySet.value.id,
+              type: 'original',
             },
           });
         }
@@ -88,6 +90,7 @@ export default defineComponent({
           query: {
             storyFile: selectedStory.file,
             storySetId: storySet.value.id,
+            type: 'original',
           },
         });
       }

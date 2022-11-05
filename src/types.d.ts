@@ -66,18 +66,6 @@ interface StoryTable {
       | MainStorySetDetail
       | ActivityStorySetDetail
       | CharacterStorySetDetail;
-    // ACTIVITY_STORY: {
-    //   [storyId: string]: ActivityStoryDetail;
-    // };
-    // CHARACTER_STORY: {
-    //   [storyId: string]: CharacterStoryDetail;
-    // };
-    // MAIN_STORY: {
-    //   [storyId: string]: MainStoryEpisodeDetail;
-    // };
-    // MINI_STORY: {
-    //   [storyId: string]: ActivityStoryDetail;
-    // };
   };
   data: {
     chapter: {
@@ -165,4 +153,40 @@ interface SpreadsheetStore {
   url: string;
   sheets: string[];
   currentSheet: number;
+}
+
+interface StoryDownloadFile {
+  name?: string;
+  code?: string;
+  fileName: string;
+  data: string;
+}
+
+interface StoryDownloadOptions {
+  tags: {
+    DIALOG: { enable: boolean };
+    MULTILINE: { enable: boolean };
+    DESCRIPTION: { enable: boolean };
+    SUBTITLE: { enable: boolean };
+    STICKER: { enable: boolean };
+    DECISION: { enable: boolean };
+    CHARACTER: { enable: boolean };
+    BACKGROUND: {
+      enable: boolean;
+      type: "name" | "link";
+    };
+    IMAGE: {
+      enable: boolean;
+      type: "name" | "link";
+    };
+  };
+  extra: {
+    layoutForStoryReader: boolean;
+    characterNameSheet: boolean;
+    characterNameSheetWithImage: boolean;
+    characterImageLookUpSheet: boolean;
+  };
+  sheet: {
+    sheetName: "code-name" | "code" | "file";
+  };
 }

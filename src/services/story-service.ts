@@ -5,6 +5,7 @@ import {
   splitParamsRegEx,
   characterSpeechRexEx,
   textTags,
+  assetUrl,
 } from "../constants";
 
 export const storyTextToObject = (text: string) => {
@@ -104,7 +105,7 @@ export const storyTextToObject = (text: string) => {
               addTag(tag);
             }
           } else {
-            if (line.length > 0 && line.indexOf(`//`) !== 0) {
+            if (line.length > 0 && line.indexOf(`//`) !== 0 && line !== "\r") {
               let tag = "DESCRIPTION";
               storyData.lines.push({
                 tag,
@@ -581,4 +582,352 @@ export const storyDataToRenderBlocks = async (storyLines: StoryLine[]) => {
     renderBlocks.push(renderBlock);
 
   return renderBlocks;
+};
+
+export const defaultStoryDownloadOptions: StoryDownloadOptions = {
+  tags: {
+    DIALOG: { enable: true },
+    MULTILINE: { enable: true },
+    DESCRIPTION: { enable: true },
+    SUBTITLE: { enable: true },
+    STICKER: { enable: true },
+    DECISION: { enable: true },
+    CHARACTER: { enable: false },
+    BACKGROUND: {
+      enable: true,
+      type: "name",
+    },
+    IMAGE: {
+      enable: true,
+      type: "name",
+    },
+  },
+  extra: {
+    layoutForStoryReader: false,
+    characterImageLookUpSheet: false,
+    characterNameSheet: false,
+    characterNameSheetWithImage: false,
+  },
+  sheet: {
+    sheetName: "file",
+  },
+};
+
+export const storyDownloadFilesToAoa = (
+  files: StoryDownloadFile[],
+  options: StoryDownloadOptions = defaultStoryDownloadOptions
+) => {
+  const dialogTagsGroup = [`DIALOG`, `MULTILINE`, `CHARACTER`];
+  const imageTagsGroup = [`IMAGE`, `BACKGROUND`];
+
+  let selectedTags = [];
+  for (const [tag, value] of Object.entries(options.tags)) {
+    if (value.enable) {
+      selectedTags.push(tag);
+      if (tag === "DECISION") {
+        selectedTags.push("PREDICATE");
+      }
+    }
+  }
+
+  let lastLine = "";
+  let charImage = "";
+  let decision: {
+    [key: string]: any;
+  } = {};
+  let result: {
+    name: string;
+    aoa: string[][];
+  }[] = [];
+  let characterImages: string[] = [];
+  let characterImageByCharacterName: {
+    [charName: string]: string[];
+  } = {};
+  const addCharName = (charName: string, charImage: string) => {
+    if (!(charName in characterImageByCharacterName)) {
+      characterImageByCharacterName[charName] = [];
+    }
+    if (
+      charImage &&
+      !characterImageByCharacterName[charName].includes(charImage)
+    ) {
+      characterImageByCharacterName[charName].push(charImage);
+    }
+  };
+
+  for (const file of files) {
+    const fileAoa: string[][] = [];
+    const data = storyTextToObject(file.data);
+
+    if (options.extra.layoutForStoryReader) {
+      fileAoa.push(["[FILE]", file.fileName]);
+      options.tags.CHARACTER.enable
+        ? fileAoa.push(["[LAYOUT]", "", "", "", "", "[NAME]", "[TEXT]"])
+        : fileAoa.push(["[LAYOUT]", "", "", "", "[NAME]", "[TEXT]"]);
+    }
+
+    for (const line of data.lines) {
+      //Empty tag
+      if (
+        textTags.includes(line.tag) &&
+        !line.params.text &&
+        !line.params.other
+      ) {
+        continue;
+      }
+      if (line.tag === "IMAGE" && !line.params.image) {
+        continue;
+      }
+      if (line.tag === "CHARACTER" && !line.params.name) {
+        continue;
+      }
+
+      if (selectedTags.includes(line.tag)) {
+        let row;
+
+        switch (line.tag) {
+          case "DIALOG": {
+            row = [line.params.name, line.params.text || line.params.other];
+            if (line.params.head) {
+              charImage = line.params.head;
+            }
+            if (options.extra.characterNameSheet) {
+              addCharName(line.params.name, charImage);
+            }
+            break;
+          }
+          case "MULTILINE": {
+            row = [line.params.name, line.params.other];
+            if (options.extra.characterNameSheet) {
+              addCharName(line.params.name, charImage);
+            }
+            break;
+          }
+          case "DESCRIPTION": {
+            row = ["", line.params.text];
+            break;
+          }
+          case "SUBTITLE": {
+            row = ["", line.params.text];
+            break;
+          }
+          case "STICKER": {
+            row = ["", line.params.text];
+            break;
+          }
+          case "DECISION": {
+            let decisionOptions = line.params.options.split(";");
+            let values = line.params.values.split(";");
+
+            if (
+              fileAoa[fileAoa.length - 1]?.length > 1 &&
+              lastLine !== "PREDICATE"
+            ) {
+              fileAoa.push([""]);
+            }
+
+            let startRow = ["[DECISION]"];
+            let endRow = ["[END_DECISION]"];
+            if (options.tags.CHARACTER.enable) {
+              startRow.push(""), endRow.push("");
+            }
+            if (options.extra.layoutForStoryReader) {
+              startRow.push("[DECISION]");
+              endRow.push("[END_DECISION]");
+            }
+
+            fileAoa.push(startRow);
+
+            for (let i = 0; i < decisionOptions.length; i++) {
+              let option = decisionOptions[i];
+              let value = values[i];
+
+              let row = [`[OPTION ${value}]`, option];
+              if (options.tags.CHARACTER.enable) {
+                row = ["", ...row];
+              }
+              if (options.extra.layoutForStoryReader) {
+                row = [`[OPTION ${value}]`, ...row];
+              }
+
+              decision[value] = fileAoa.length + 1;
+              fileAoa.push(row);
+            }
+
+            fileAoa.push(endRow);
+            break;
+          }
+          case "PREDICATE": {
+            let references = line.params.references.split(`;`);
+            let referencesLines = [];
+            for (const ref of references) {
+              referencesLines.push(decision[ref]);
+            }
+            row = [
+              "[PREDICATE]",
+              references.join(","),
+              referencesLines.join(","),
+            ];
+            break;
+          }
+          case "IMAGE": {
+            if (line.params.image) {
+              row = ["[IMAGE]"];
+              switch (options.tags.IMAGE.type) {
+                case "name": {
+                  row.push(line.params.image);
+                  break;
+                }
+                case "link": {
+                  row.push(
+                    `${assetUrl}/images/avg/imgs/${line?.params.image}.webp`
+                  );
+                  break;
+                }
+                default:
+                  break;
+              }
+            }
+            break;
+          }
+          case "BACKGROUND": {
+            let image = line.params.image || `bg_black`;
+            row = ["[BACKGROUND]"];
+            switch (options.tags.BACKGROUND.type) {
+              case "name": {
+                row.push(image);
+                break;
+              }
+              case "link": {
+                row.push(`${assetUrl}/images/avg/imgs/${image}.webp`);
+                break;
+              }
+              default:
+                break;
+            }
+
+            break;
+          }
+          case "CHARACTER": {
+            if (line.params.name) {
+              if (line.params.name2 && line.params.focus === "2") {
+                charImage = line.params.name2.toLowerCase();
+              } else {
+                charImage = line.params.name.toLowerCase();
+              }
+            } else {
+              charImage = "";
+            }
+
+            //Characters images look up sheet
+            if (
+              options.extra.characterImageLookUpSheet &&
+              !characterImages.includes(charImage)
+            ) {
+              characterImages.push(charImage);
+            }
+            break;
+          }
+          default: {
+            break;
+          }
+        }
+
+        //insert blank row
+        if (
+          fileAoa.length > 0 &&
+          line.tag !== lastLine &&
+          line.tag !== "DECISION" &&
+          lastLine !== "PREDICATE"
+        ) {
+          if ([...dialogTagsGroup, ...imageTagsGroup].includes(line.tag)) {
+            if (
+              dialogTagsGroup.includes(line.tag) &&
+              !dialogTagsGroup.includes(lastLine)
+            ) {
+              fileAoa.push([""]);
+            } else if (
+              imageTagsGroup.includes(line.tag) &&
+              !imageTagsGroup.includes(lastLine)
+            ) {
+              fileAoa.push([""]);
+            }
+          } else {
+            fileAoa.push([""]);
+          }
+        }
+
+        if (row) {
+          //Character Image
+          if (options.tags.CHARACTER.enable) {
+            if (["DIALOG", "MULTILINE"].includes(line.tag)) {
+              row = [charImage, ...row];
+            } else {
+              row = ["", ...row];
+            }
+          }
+
+          //Layout for Story Reader
+          if (options.extra.layoutForStoryReader) {
+            row = [`[${line.tag}]`, ...row];
+          }
+
+          fileAoa.push(row);
+        }
+
+        lastLine = line.tag;
+      }
+    }
+
+    let sheetName = file.fileName;
+    switch (options.sheet.sheetName) {
+      case "code": {
+        sheetName = file.code ? file.code : file.fileName;
+        break;
+      }
+      case "code-name": {
+        sheetName =
+          file.code && file.name ? `${file.code}: ${file.name}` : file.fileName;
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+    result.push({
+      name: sheetName,
+      aoa: fileAoa,
+    });
+  }
+
+  if (options.extra.characterImageLookUpSheet) {
+    result = [
+      {
+        name: "Characters Images Lookup",
+        aoa: characterImages
+          .sort((a, b) => a.localeCompare(b))
+          .map((image) => [image]),
+      },
+      ...result,
+    ];
+  }
+  if (options.extra.characterNameSheet) {
+    result = [
+      {
+        name: "Characters",
+        aoa: Object.keys(characterImageByCharacterName)
+          .sort((a, b) => a.localeCompare(b))
+          .map((charName) => {
+            let row = [charName];
+            if (options.extra.characterNameSheetWithImage) {
+              row = [...row, ...characterImageByCharacterName[charName]];
+            }
+            return row;
+          }),
+      },
+      ...result,
+    ];
+  }
+
+  return result;
 };

@@ -19,7 +19,8 @@
     "vue": "^3.2.37",
     "vue-router": "^4.1.2",
     "vuetify": "^3.0.0-beta.0",
-    "webfontloader": "^1.0.0"
+    "webfontloader": "^1.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/merge-images": "^1.2.1",
