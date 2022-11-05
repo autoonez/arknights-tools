@@ -1,1 +1,0 @@
-import{d as o,_ as t,c as r,o as e}from"./index.abfb314c.js";import{V as n}from"./VApp.a14d4cb6.js";import"./layout.540aacd2.js";import"./resizeObserver.456e8566.js";import"./useRender.f718f098.js";const a=o({name:"StoryDownload"});function p(s,c,m,i,_,d){return e(),r(n)}const k=t(a,[["render",p]]);export{k as default};

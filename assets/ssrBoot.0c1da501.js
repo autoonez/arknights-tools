@@ -1,1 +1,0 @@
-import{h as e}from"./router.2bd6cf50.js";import{y as t,E as s,g as r,ar as n}from"./index.abfb314c.js";const c=e("flex-grow-1","div","VSpacer");function d(){const o=t(!1);return s(()=>{window.requestAnimationFrame(()=>{o.value=!0})}),{ssrBootStyles:r(()=>o.value?void 0:{transition:"none !important"}),isBooted:n(o)}}export{c as V,d as u};
