@@ -1,7 +1,4 @@
-export const assetUrl =
-  process.env.NODE_ENV === "production"
-    ? `/arknights-assets`
-    : `http://localhost:5000/arknights-assets`;
+export const assetUrl = "/arknights-assets";
 
 export const storyType = [
   { id: "MAIN_STORY", routeName: "select-story-main", name: "Main Theme" },

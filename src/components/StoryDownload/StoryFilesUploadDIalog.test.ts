@@ -20,17 +20,18 @@ describe("StoryFilesUploadDialog.vue", () => {
   });
   const saveButton = wrapper.findComponent(".v-btn");
 
-  test("click save button when no file select", () => {
-    saveButton.trigger("click");
-    expect(wrapper.emitted('saveFiles')).toBeUndefined()
+  test("click save button when no file select", async () => {
+    expect(saveButton.attributes("disabled")).toEqual("true");
+    await saveButton.trigger("click");
+    expect(wrapper.emitted("saveFiles")).toBeUndefined();
   });
 
   test("upload files", async () => {
     const mock = vi.fn().mockImplementation(wrapper.vm.onInputFileChange);
     await mock(event);
-    expect(wrapper.vm.files).toHaveLength(2)
+    expect(wrapper.vm.files).toHaveLength(2);
 
-    saveButton.trigger('click')
-    expect(wrapper.emitted('saveFiles')).toHaveLength(1)
+    await saveButton.trigger("click");
+    expect(wrapper.emitted("saveFiles")).toHaveLength(1);
   });
 });

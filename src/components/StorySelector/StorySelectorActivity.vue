@@ -1,15 +1,7 @@
 <template>
   <v-row>
     <template v-for="(storySet, i) in storyList" :key="i">
-      <v-col
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-        lx="2"
-        xxl="1"
-        v-if="language in storySet.name"
-      >
+      <v-col cols="12" sm="6" md="4" lg="3" lx="2" xxl="1">
         <v-card @click="$emit('select', storySet.id)">
           <v-img :src="getImageSrc(storySet.entryPic)"></v-img>
           <v-card-title>{{ storySet.name[language] }}</v-card-title>
@@ -33,11 +25,18 @@ const emit = defineEmits<{
 }>();
 
 const { getStoryByType } = useStoryTableStore();
-const storyList = computed(() => getStoryByType(props.type)) as ComputedRef<
-  ActivityStorySetDetail[]
->;
+const storyList = computed(() =>
+  getStoryByType(props.type)?.filter(
+    (storySet) => props.language in storySet.name
+  )
+) as ComputedRef<ActivityStorySetDetail[]>;
 
 const getImageSrc = (entryPic: string) => {
   return `${assetUrl}/images/storyEntryPic/activity/${entryPic}.webp`;
 };
+
+defineExpose({
+  storyList,
+  getImageSrc,
+});
 </script>

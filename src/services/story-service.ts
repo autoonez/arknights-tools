@@ -189,7 +189,7 @@ export const spreadsheetToJson = (
 
                 "DECISION" in result.tagCount
                   ? (result.tagCount["DECISION"] =
-                      result.tagCount["DECISION"] + 1)
+                    result.tagCount["DECISION"] + 1)
                   : (result.tagCount["DECISION"] = 1);
 
                 index = nextIndex;
@@ -256,7 +256,7 @@ export const replaceStoryText = ({
     if (line.tag in targetStoryLineByTag) {
       if (
         targetStoryLineByTagIndex[line.tag] <
-          targetStoryLineByTag[line.tag].length &&
+        targetStoryLineByTag[line.tag].length &&
         Object.keys(line.params).length > 0
       ) {
         const targetLine =
@@ -314,6 +314,9 @@ export const storyDataToRenderBlocks = async (storyLines: StoryLine[]) => {
   let lastLine;
   let lastDecision;
   let charImage = "";
+  let charSlots: {
+    [slot: string]: string;
+  } = {};
 
   for (let i = 0; i < storyLines.length; i++) {
     let line = storyLines[i];
@@ -337,6 +340,32 @@ export const storyDataToRenderBlocks = async (storyLines: StoryLine[]) => {
                 text: [line.params.text],
               },
             };
+          }
+        }
+        break;
+      }
+      case "STICKER": {
+        if (line.params.text) {
+          let text = line.params.text.replace(/\\n/g, '')
+          if (!lastLine) {
+            lastLine = {
+              tag: "STICKER",
+              params: {
+                text: [text],
+              },
+            };
+          } else {
+            if (lastLine.tag === "STICKER") {
+              lastLine.params.text.push(text);
+            } else {
+              renderBlock.push(lastLine);
+              lastLine = {
+                tag: "STICKER",
+                params: {
+                  text: [text],
+                },
+              };
+            }
           }
         }
         break;
@@ -501,78 +530,20 @@ export const storyDataToRenderBlocks = async (storyLines: StoryLine[]) => {
         }
         break;
       }
+      case "CHARSLOT": {
+        if (line.params.name && line.params.slot) {
+          charSlots[line.params.slot] = line.params.name;
+        }
+        if (line.params.focus) {
+          if (charSlots[line.params.focus]) {
+            charImage = charSlots[line.params.focus];
+          }
+        }
+      }
       default: {
         break;
       }
     }
-    //preload images
-    // if (["IMAGE", "BACKGROUND", "CHARACTER"].includes(line.tag)) {
-    //   if (["IMAGE", "BACKGROUND"].includes(line.tag)) {
-    //     if (line.params.image) {
-    //       if (!(line.params.image in imagesUrl[line.tag])) {
-    //         let image = new Image();
-    //         let url = "";
-    //         if (line.tag === "IMAGE") {
-    //           url = `${assetUrl}/images/avg/imgs/${line.params.image}.webp`;
-    //         }
-    //         if (line.tag === "BACKGROUND") {
-    //           url = `${assetUrl}/images/avg/bg/${line.params.image}.webp`;
-    //         }
-    //         image.src = url;
-    //         imagesUrl[line.tag][line.params.image] = url;
-    //       }
-    //     }
-    //   } else if (line.tag === "CHARACTER") {
-    //     if (characterSpriteTable) {
-    //       if (!(charImage in imagesUrl["CHARACTER"]) && charImage) {
-    //         let url = "";
-    //         let file;
-    //         let { name, num, group } =
-    //           getCharNameAndNumFromSpriteName(charImage);
-    //         name = name.toLocaleLowerCase();
-    //         num = num.trim();
-    //         group = group.trim();
-    //         let charSpriteHub = characterSpriteTable[name];
-    //         if (charSpriteHub[group]["sprites"][num]["isWholeBody"] === 0) {
-    //           let baseNum = Object.keys(charSpriteHub[group]["sprites"])[
-    //             Object.keys(charSpriteHub[group]["sprites"]).length - 1
-    //           ];
-    //           if (baseNum !== num) {
-    //             let baseFile =
-    //               charSpriteHub[group]["sprites"][baseNum]["sprite"];
-    //             let baseSrc = `${assetUrl}/images/avg/characters/${name}/${baseFile}`;
-
-    //             let faceFile = charSpriteHub[group]["sprites"][num]["sprite"];
-    //             let faceSrc = `${assetUrl}/images/avg/characters/${name}/${faceFile}`;
-
-    //             url = await mergeImages(
-    //               [
-    //                 {
-    //                   src: baseSrc,
-    //                   x: 0,
-    //                   y: 0,
-    //                 },
-    //                 {
-    //                   src: faceSrc,
-    //                   x: charSpriteHub[group]["facePos"]["x"],
-    //                   y: charSpriteHub[group]["facePos"]["y"],
-    //                 },
-    //               ],
-    //               {
-    //                 crossOrigin: "anonymous",
-    //                 format: "image/webp",
-    //               }
-    //             );
-    //           }
-    //         } else {
-    //           file = charSpriteHub[group]["sprites"][num]["sprite"];
-    //           url = `${assetUrl}/images/avg/characters/${name}/${file}`;
-    //         }
-    //         imagesUrl["CHARACTER"][charImage] = url;
-    //       }
-    //     }
-    //   }
-    // }
   }
   if (lastLine && renderBlock[renderBlock.length - 1] !== lastLine) {
     renderBlock.push(lastLine);
@@ -617,7 +588,7 @@ export const storyDownloadFilesToAoa = (
   files: StoryDownloadFile[],
   options: StoryDownloadOptions = defaultStoryDownloadOptions
 ) => {
-  const dialogTagsGroup = [`DIALOG`, `MULTILINE`, `CHARACTER`];
+  const dialogTagsGroup = [`DIALOG`, `MULTILINE`, `CHARACTER`, `CHARSLOT`];
   const imageTagsGroup = [`IMAGE`, `BACKGROUND`];
 
   let selectedTags = [];
@@ -627,11 +598,17 @@ export const storyDownloadFilesToAoa = (
       if (tag === "DECISION") {
         selectedTags.push("PREDICATE");
       }
+      if (tag === `CHARACTER`) {
+        selectedTags.push(`CHARSLOT`);
+      }
     }
   }
 
   let lastLine = "";
   let charImage = "";
+  let charSlots: {
+    [slot: string]: string;
+  } = {};
   let decision: {
     [key: string]: any;
   } = {};
@@ -679,6 +656,11 @@ export const storyDownloadFilesToAoa = (
         continue;
       }
       if (line.tag === "CHARACTER" && !line.params.name) {
+        charImage = "";
+        continue;
+      }
+      if (line.tag === "CHARSLOT" && !line.params.name) {
+        charSlots = {};
         continue;
       }
 
@@ -712,7 +694,8 @@ export const storyDownloadFilesToAoa = (
             break;
           }
           case "STICKER": {
-            row = ["", line.params.text];
+            //remove \n <i> </i>
+            row = ["", line.params.text.replace(/\\n/g, '').replace(/<i>|<\/i>/g, '')];
             break;
           }
           case "DECISION": {
@@ -799,7 +782,7 @@ export const storyDownloadFilesToAoa = (
                 break;
               }
               case "link": {
-                row.push(`${assetUrl}/images/avg/imgs/${image}.webp`);
+                row.push(`${assetUrl}/images/avg/bg/${image}.webp`);
                 break;
               }
               default:
@@ -815,21 +798,39 @@ export const storyDownloadFilesToAoa = (
               } else {
                 charImage = line.params.name.toLowerCase();
               }
+
+              if (charImage === "char_empty") {
+                charImage = "";
+              }
             } else {
               charImage = "";
             }
 
-            //Characters images look up sheet
-            if (
-              options.extra.characterImageLookUpSheet &&
-              !characterImages.includes(charImage)
-            ) {
-              characterImages.push(charImage);
-            }
             break;
+          }
+          case "CHARSLOT": {
+            if (line.params.name && line.params.slot) {
+              charSlots[line.params.slot] = line.params.name;
+              charImage = line.params.name;
+            }
+            if (line.params.focus) {
+              if (charSlots[line.params.focus]) {
+                charImage = charSlots[line.params.focus];
+              }
+            }
           }
           default: {
             break;
+          }
+        }
+
+        if (["CHARACTER", "CHARSLOT"].includes(line.tag)) {
+          //Characters images look up sheet
+          if (
+            options.extra.characterImageLookUpSheet &&
+            !characterImages.includes(charImage)
+          ) {
+            characterImages.push(charImage);
           }
         }
 
@@ -879,15 +880,17 @@ export const storyDownloadFilesToAoa = (
       }
     }
 
-    let sheetName = file.fileName;
+    let fileNameSplit = file.fileName.split("/");
+    let fileName = fileNameSplit[fileNameSplit.length - 1];
+    let sheetName = fileName;
     switch (options.sheet.sheetName) {
       case "code": {
-        sheetName = file.code ? file.code : file.fileName;
+        sheetName = file.code ? file.code : fileName;
         break;
       }
       case "code-name": {
         sheetName =
-          file.code && file.name ? `${file.code}: ${file.name}` : file.fileName;
+          file.code && file.name ? `${file.code} ${file.name}` : fileName;
         break;
       }
       default: {
@@ -930,4 +933,18 @@ export const storyDownloadFilesToAoa = (
   }
 
   return result;
+};
+
+export const getStoryTitle = (
+  story: StoryDetail,
+  language: string = "zh_CN"
+) => {
+  let title = ``;
+  if (story?.code) {
+    title = `${story.code}: ${story.name[language] || story.name["zh_CN"]}`;
+  } else {
+    title = `${story.name[language] || story.name["zh_CN"]}`;
+  }
+
+  return title;
 };

@@ -10,6 +10,15 @@ import vuetify from "vite-plugin-vuetify";
 export default defineConfig({
   base: '/arknights-tools/',
   plugins: [vue(), vuetify({ autoImport: true })],
+  server: {
+    proxy: {
+      "/arknights-assets": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/arknights-assets/, '')
+      }
+    }
+  },
   test: {
     environment: "happy-dom",
     setupFiles: "vuetify.config.ts",

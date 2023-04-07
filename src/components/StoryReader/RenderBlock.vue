@@ -5,6 +5,11 @@
       :line="line"
       v-show="lineIndexsToShow.includes(index)"
     />
+    <TagSticker
+      v-if="line.tag === 'STICKER'"
+      :line="line"
+      v-show="lineIndexsToShow.includes(index)"
+    />
     <TagSubtitle
       v-else-if="line.tag === 'SUBTITLE'"
       :line="line"
@@ -49,6 +54,7 @@ import TagSubtitle from "./TagSubtitle.vue";
 import TagCharacterSpeech from "./TagCharacterSpeech.vue";
 import TagDecision from "./TagDecision.vue";
 import TagImage from "./TagImage.vue";
+import TagSticker from "./TagSticker.vue";
 
 export default defineComponent({
   name: "RenderBlock",
@@ -131,6 +137,7 @@ export default defineComponent({
     TagCharacterSpeech,
     TagDecision,
     TagImage,
-  },
+    TagSticker
+},
 });
 </script>

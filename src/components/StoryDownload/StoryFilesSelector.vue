@@ -2,12 +2,14 @@
   <v-checkbox
     v-for="story in stories"
     hide-details
-    :label="getStoryTitle(story.storyId.toString())"
+    :label="storyTitle(story.storyId.toString())"
     v-model="selectedStories[story.storyId]"
   ></v-checkbox>
 </template>
 
 <script setup lang="ts">
+import { getStoryTitle } from "../../services/story-service";
+
 const props = defineProps<{
   language: string;
   stories: StoryDetail[];
@@ -15,28 +17,13 @@ const props = defineProps<{
     [storyId: string]: boolean;
   };
 }>();
-const emit = defineEmits<{
-  (
-    e: "change",
-    stories: {
-      [storyId: string]: boolean;
-    }
-  ): void;
-}>();
 
-const getStoryTitle = (storyId: string) => {
-  let title = "";
-  const story = props.stories.find((detail) => detail.storyId === storyId);
+const storyTitle = (storyId: string) => {
+  const story = props.stories.find((story) => story.storyId === storyId);
   if (story) {
-    if (story?.code) {
-      title = `${story.code}: ${
-        story.name[props.language] || story.name["zh_CN"]
-      }`;
-    } else {
-      title = `${story.name[props.language] || story.name["zh_CN"]}`;
-    }
-
-    return title;
+    return getStoryTitle(story, props.language);
+  } else {
+    return "";
   }
 };
 </script>

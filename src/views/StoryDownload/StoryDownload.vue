@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref, ref } from "vue";
+import { computed, defineComponent, Ref, ref, watch } from "vue";
 import StoryFilesUploadDialog from "../../components/StoryDownload/StoryFilesUploadDialog.vue";
 import StoryDownloadPreview from "../../components/StoryDownload/StoryDownloadPreview.vue";
 import {
@@ -70,8 +70,6 @@ export default defineComponent({
     const storySelectDialog = ref(false);
     const storyFilesUploadDialog = ref(false);
     const storyDownloadOptionsDialog = ref(false);
-
-    const options = ref(defaultStoryDownloadOptions);
 
     const previewIndex = ref(0);
     const previewData = computed(() => sheets.value[previewIndex.value]?.aoa);
@@ -101,6 +99,31 @@ export default defineComponent({
         XLSX.writeFile(wb, `${files.value[0].fileName}.xlsx`);
       }
     };
+
+    const options = ref(defaultStoryDownloadOptions);
+    watch(
+      () => [
+        options.value.tags.CHARACTER.enable,
+        options.value.extra.characterNameSheetWithImage,
+        options.value.extra.characterImageLookUpSheet,
+      ],
+      () => {
+        if (
+          options.value.extra.characterNameSheetWithImage ||
+          options.value.extra.characterImageLookUpSheet
+        ) {
+          options.value.tags.CHARACTER.enable = true;
+        }
+      }
+    );
+    watch(
+      () => options.value.extra.characterNameSheetWithImage,
+      () => {
+        if (options.value.extra.characterNameSheetWithImage) {
+          options.value.extra.characterNameSheet = true;
+        }
+      }
+    );
 
     return {
       loading,
